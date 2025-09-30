@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -13,27 +17,33 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           body: |
-            ## What's Changed
+            ## 🎉 Release ${{ github.ref_name }}
             
             See the [CHANGELOG](CHANGELOG.md) for detailed changes.
             
-            ## Usage
+            ## 🚀 Usage
             
             ```yaml
             - name: Detect Duplicate Logic
-              uses: arthurfernandesdemorais/duplicate-logic-detector-action@${{ github.ref }}
+              uses: ArthurMor4is/duplicate-logic-detector-action@${{ github.ref_name }}
               with:
                 github-token: ${{ secrets.GITHUB_TOKEN }}
             ```
+            
+            ## 📚 Documentation
+            
+            - [README](README.md) - Complete documentation
+            - [Usage Guide](USAGE.md) - Detailed usage instructions  
+            - [Contributing](CONTRIBUTING.md) - How to contribute
           draft: false
           prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   update-major-tag:
     runs-on: ubuntu-latest
@@ -43,15 +53,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update major version tag
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           
           # Extract major version (e.g., v1.2.3 -> v1)
-          TAG=${GITHUB_REF#refs/tags/}
+          TAG=${{ github.ref_name }}
           MAJOR_VERSION=$(echo $TAG | cut -d. -f1)
+          
+          echo "Updating major version tag: $MAJOR_VERSION"
           
           # Create or update major version tag
           git tag -fa $MAJOR_VERSION -m "Update $MAJOR_VERSION to $TAG"
