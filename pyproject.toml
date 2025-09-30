@@ -59,9 +59,11 @@ run-tests = "run_tests:main"
 packages = ["scripts"]
 
 [project.urls]
-Homepage = "https://github.com/talisman-team/duplicate-logic-detector-action"
-Repository = "https://github.com/talisman-team/duplicate-logic-detector-action"
-Issues = "https://github.com/talisman-team/duplicate-logic-detector-action/issues"
+Homepage = "https://github.com/arthurfernandesdemorais/duplicate-logic-detector-action"
+Repository = "https://github.com/arthurfernandesdemorais/duplicate-logic-detector-action"
+Issues = "https://github.com/arthurfernandesdemorais/duplicate-logic-detector-action/issues"
+Documentation = "https://github.com/arthurfernandesdemorais/duplicate-logic-detector-action/wiki"
+Changelog = "https://github.com/arthurfernandesdemorais/duplicate-logic-detector-action/blob/main/CHANGELOG.md"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,57 @@
+name: Test Action
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-action:
+    runs-on: ubuntu-latest
+    name: Test the action
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Test the action
+        uses: ./
+        id: test
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          similarity-threshold: 0.6
+          post-comment: false
+          fail-on-duplicates: false
+
+      - name: Verify outputs
+        run: |
+          echo "Duplicates found: ${{ steps.test.outputs.duplicates-found }}"
+          echo "Match count: ${{ steps.test.outputs.match-count }}"
+          echo "High confidence count: ${{ steps.test.outputs.high-confidence-count }}"
+          echo "Report path: ${{ steps.test.outputs.report-path }}"
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    name: Run unit tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Run tests
+        run: uv run pytest tests/ -v --cov=scripts --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: true
