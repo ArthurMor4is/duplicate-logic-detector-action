@@ -1,6 +1,6 @@
 name: 'Duplicate Logic Detector'
-description: 'Automatically detect duplicate logic in Python code changes using advanced AST analysis and semantic similarity. Prevent code duplication and improve code quality.'
-author: 'Arthur Fernandes'
+description: 'Automatically detect duplicate logic in Python code.'
+author: 'ArthurMor4is'
 
 branding:
   icon: 'search'
