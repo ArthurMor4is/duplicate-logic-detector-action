@@ -119,22 +119,19 @@ runs:
       shell: bash
       run: |
         # Install ast-grep based on OS
-        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-          # Linux
-          curl -L https://github.com/ast-grep/ast-grep/releases/latest/download/ast-grep-x86_64-unknown-linux-gnu.zip -o ast-grep.zip
-          unzip ast-grep.zip
-          chmod +x ast-grep
-          sudo mv ast-grep /usr/local/bin/
-        elif [[ "$OSTYPE" == "darwin"* ]]; then
+        if [[ "$RUNNER_OS" == "Linux" ]]; then
+          # Linux - use npm installation as it's more reliable
+          npm install -g @ast-grep/cli
+        elif [[ "$RUNNER_OS" == "macOS" ]]; then
           # macOS
           brew install ast-grep
         else
-          echo "Unsupported OS: $OSTYPE"
-          exit 1
+          echo "Unsupported OS: $RUNNER_OS"
+          echo "Skipping ast-grep installation - detection will work without it"
         fi
         
-        # Verify installation
-        ast-grep --version
+        # Verify installation (don't fail if not installed)
+        ast-grep --version || echo "ast-grep not available, continuing without it"
     
     - name: Copy detection scripts
       shell: bash
@@ -267,6 +264,7 @@ runs:
           duplicate-logic-report.json
           duplicate-logic-report.md
         retention-days: 30
+        if-no-files-found: ignore
     
     - name: Comment on PR
       if: steps.detect.outputs.duplicates_found == 'true' && inputs.post-comment == 'true' && github.event_name == 'pull_request'

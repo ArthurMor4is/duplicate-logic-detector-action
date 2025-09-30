@@ -1,7 +1,7 @@
 # 🔍 Duplicate Logic Detector Action
 
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Duplicate%20Logic%20Detector-blue.svg?colorA=24292e&colorB=0366d6&style=flat&longCache=true&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAM6wAADOsB5dZE0gAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAERSURBVCiRhZG/SsMxFEZPfsVJ61jbxaF0cRQRcRJ9hlYn30IHN/+9iquDCOIsblIrOjqKgy5aKoJQj4n3EX8DzMMmdU3ruAQfOQlee/XrgHdogK0aaQq6gRSFq2y2+fEdMQPMfnNwlWpWJYbBfC3QRGGYHrPr/TlZjPb7NNM02P9M3s2BNb/uuEOPiN1vUoJ+3Pqz1rvqg1XvFINL4KmNXFMaSID2G7yyHSWqMXpSXEMhNRDOBOb2g3xE6F2nQfMnUNSvDEwHiQeKq8l8o+zJW0FGJHZiJSJ6jH1qmHVYOTiCsXzxnmBFYt8y5Yb1CzWjZGZq7/dkb8+PrNrBdWMHyoJgvjJnxBSoUQSdNjLgxfbGSr5aBvXGNvQFHxzJVRqxJb5EJg9dn8AQqTwP2JQoqQAAAABJRU5ErkJggg==)](https://github.com/marketplace/actions/duplicate-logic-detector)
-[![Tests](https://github.com/ArthurMor4is/duplicate-logic-detector-action/workflows/Tests/badge.svg)](https://github.com/ArthurMor4is/duplicate-logic-detector-action/actions)
+[![Tests](https://github.com/ArthurMor4is/duplicate-logic-detector-action/workflows/Test%20Action/badge.svg)](https://github.com/ArthurMor4is/duplicate-logic-detector-action/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Automatically detect duplicate logic in Python code changes using advanced AST analysis and semantic similarity.**
