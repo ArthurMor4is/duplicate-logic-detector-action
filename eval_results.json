@@ -1,0 +1,53 @@
+{
+  "summary": {
+    "total_runs": 3,
+    "successful_runs": 3,
+    "failed_runs": 0
+  },
+  "performance_analysis": {
+    "average_execution_time": 1.9054924647013347,
+    "average_memory_usage_mb": -3.9479166666666665,
+    "average_throughput_functions_per_second": 678.9642131431905
+  },
+  "scalability_analysis": {
+    "dataset_scale_factor": 10.0,
+    "time_scale_factor": 0.5708179118220346,
+    "scalability_efficiency": 17.518721457216163,
+    "projected_time_for_5000_functions": 3.701042532920838
+  },
+  "results": [
+    {
+      "dataset": "small",
+      "execution_time_seconds": 2.593501329421997,
+      "memory_usage_mb": -10.484375,
+      "functions_analyzed": 200,
+      "files_analyzed": 10,
+      "matches_found": 0,
+      "duplicates_detected": 0,
+      "throughput_functions_per_second": 77.11582706015932,
+      "error": null
+    },
+    {
+      "dataset": "medium",
+      "execution_time_seconds": 1.6425590515136719,
+      "memory_usage_mb": 0.296875,
+      "functions_analyzed": 1000,
+      "files_analyzed": 50,
+      "matches_found": 0,
+      "duplicates_detected": 0,
+      "throughput_functions_per_second": 608.8061181596286,
+      "error": null
+    },
+    {
+      "dataset": "large",
+      "execution_time_seconds": 1.480417013168335,
+      "memory_usage_mb": -1.65625,
+      "functions_analyzed": 2000,
+      "files_analyzed": 100,
+      "matches_found": 0,
+      "duplicates_detected": 0,
+      "throughput_functions_per_second": 1350.9706942097837,
+      "error": null
+    }
+  ]
+}
