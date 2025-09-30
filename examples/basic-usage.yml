@@ -1,0 +1,28 @@
+name: Basic Duplicate Logic Detection
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - '**/*.py'
+
+jobs:
+  duplicate-logic-check:
+    name: Check for Duplicate Logic
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Detect Duplicate Logic
+        uses: your-org/duplicate-logic-detector-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          similarity-threshold: '0.7'
+          post-comment: true
+          fail-on-duplicates: false

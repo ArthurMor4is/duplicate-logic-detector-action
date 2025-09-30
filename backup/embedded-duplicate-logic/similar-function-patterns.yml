@@ -1,0 +1,89 @@
+id: similar-function-patterns
+language: python
+severity: warning
+message: >-
+  This function pattern may duplicate existing logic in the codebase.
+note: |
+  Common patterns that often indicate duplicate logic:
+  - Data validation functions with similar parameter patterns
+  - CRUD operations with similar database interactions  
+  - Authentication/authorization checks with similar logic
+  - File processing functions with similar operations
+  - API endpoint handlers with similar request/response patterns
+
+rule:
+  any:
+    # Pattern 1: Data validation functions
+    - all:
+        - pattern: |
+            def validate_$FIELD($PARAM):
+                $$$
+        - inside:
+            pattern: |
+              if not $CONDITION:
+                  raise $EXCEPTION
+                  
+    # Pattern 2: CRUD-like operations
+    - all:
+        - pattern: |
+            def $ACTION_$ENTITY($$$):
+                $$$
+        - inside:
+            any:
+              - pattern: session.query($$$)
+              - pattern: $$.filter($$$)
+              - pattern: $$.add($$$)
+              - pattern: $$.delete($$$)
+              - pattern: session.commit()
+              
+    # Pattern 3: Authentication patterns
+    - all:
+        - pattern: |
+            def $AUTH_FUNC($$$):
+                $$$
+        - inside:
+            any:
+              - pattern: |
+                  if not $USER_CHECK:
+                      raise $AUTH_ERROR
+              - pattern: verify_$$$($$$)
+              - pattern: check_$$$($$$)
+              
+    # Pattern 4: File processing patterns  
+    - all:
+        - pattern: |
+            def $PROCESS_$FILE($$$):
+                $$$
+        - inside:
+            any:
+              - pattern: open($$$)
+              - pattern: $$.read($$$)
+              - pattern: $$.write($$$)
+              - pattern: json.load($$$)
+              - pattern: json.dump($$$)
+              
+    # Pattern 5: API endpoint patterns
+    - all:
+        - pattern: |
+            @$DECORATOR
+            def $ENDPOINT($$$):
+                $$$
+        - inside:
+            any:
+              - pattern: request.json
+              - pattern: jsonify($$$)
+              - pattern: return $RESPONSE, $STATUS_CODE
+              
+transforms:
+  FIELD:
+    regex: '^(email|phone|name|password|username|id|data|input|value).*'
+  ACTION:
+    regex: '^(create|update|delete|get|find|fetch|save|load).*'
+  ENTITY:  
+    regex: '^(user|customer|order|product|document|file|record|item).*'
+  AUTH_FUNC:
+    regex: '^(authenticate|authorize|verify|check|validate).*'
+  PROCESS:
+    regex: '^(process|parse|convert|transform|extract|generate).*'
+  FILE:
+    regex: '^(file|document|data|json|xml|csv|pdf).*'

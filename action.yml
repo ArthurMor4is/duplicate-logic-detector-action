@@ -1,0 +1,304 @@
+name: 'Duplicate Logic Detector'
+description: 'Detect duplicate logic in Python code changes using AST analysis and semantic similarity'
+author: 'Talisman Team'
+
+branding:
+  icon: 'search'
+  color: 'blue'
+
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+    default: ${{ github.token }}
+  
+  pr-number:
+    description: 'Pull request number'
+    required: false
+    default: ${{ github.event.number }}
+  
+  repository:
+    description: 'Repository name (owner/repo)'
+    required: false
+    default: ${{ github.repository }}
+  
+  base-ref:
+    description: 'Base reference for comparison'
+    required: false
+    default: ${{ github.base_ref }}
+  
+  head-ref:
+    description: 'Head reference for comparison'
+    required: false
+    default: ${{ github.head_ref }}
+  
+  config-file:
+    description: 'Path to duplicate logic configuration file'
+    required: false
+    default: '.duplicate-logic-config.yml'
+  
+  include-patterns:
+    description: 'File patterns to include (JSON array)'
+    required: false
+    default: '["src/**/*.py", "tests/**/*.py"]'
+  
+  exclude-patterns:
+    description: 'File patterns to exclude (JSON array)'
+    required: false
+    default: '["generated/**", "migrations/**", "**/test_*.py"]'
+  
+  similarity-threshold:
+    description: 'Minimum similarity threshold for reporting (0.0-1.0)'
+    required: false
+    default: '0.7'
+  
+  post-comment:
+    description: 'Whether to post findings as PR comment'
+    required: false
+    default: 'true'
+  
+  fail-on-duplicates:
+    description: 'Whether to fail the action if high-confidence duplicates are found'
+    required: false
+    default: 'false'
+  
+  working-directory:
+    description: 'Working directory for the analysis'
+    required: false
+    default: '.'
+
+outputs:
+  duplicates-found:
+    description: 'Whether any duplicates were found'
+    value: ${{ steps.detect.outputs.duplicates_found }}
+  
+  match-count:
+    description: 'Number of duplicate matches found'
+    value: ${{ steps.detect.outputs.match_count }}
+  
+  high-confidence-count:
+    description: 'Number of high-confidence matches'
+    value: ${{ steps.detect.outputs.high_confidence_count }}
+  
+  report-path:
+    description: 'Path to the generated report file'
+    value: ${{ steps.detect.outputs.report_path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        enable-cache: true
+        cache-dependency-glob: "pyproject.toml"
+    
+    - name: Install dependencies
+      shell: bash
+      run: |
+        # Install project dependencies using uv
+        uv sync --frozen
+        
+        # Download required NLTK data
+        uv run python -c "
+        import nltk
+        try:
+            nltk.data.find('tokenizers/punkt')
+            nltk.data.find('corpora/stopwords')
+        except LookupError:
+            nltk.download('punkt', quiet=True)
+            nltk.download('stopwords', quiet=True)
+        "
+    
+    - name: Install ast-grep
+      shell: bash
+      run: |
+        # Install ast-grep based on OS
+        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+          # Linux
+          curl -L https://github.com/ast-grep/ast-grep/releases/latest/download/ast-grep-x86_64-unknown-linux-gnu.zip -o ast-grep.zip
+          unzip ast-grep.zip
+          chmod +x ast-grep
+          sudo mv ast-grep /usr/local/bin/
+        elif [[ "$OSTYPE" == "darwin"* ]]; then
+          # macOS
+          brew install ast-grep
+        else
+          echo "Unsupported OS: $OSTYPE"
+          exit 1
+        fi
+        
+        # Verify installation
+        ast-grep --version
+    
+    - name: Copy detection scripts
+      shell: bash
+      run: |
+        # Copy the detection script from the action
+        cp ${{ github.action_path }}/scripts/duplicate_logic_detector.py ./
+        chmod +x duplicate_logic_detector.py
+        
+        # Copy default configuration if none exists
+        if [ ! -f "${{ inputs.config-file }}" ]; then
+          cp ${{ github.action_path }}/config/default-config.yml "${{ inputs.config-file }}"
+        fi
+        
+        # Copy AST-grep rules
+        mkdir -p ast-grep/rules/python/duplicate-logic/
+        cp -r ${{ github.action_path }}/ast-grep/rules/* ast-grep/rules/ 2>/dev/null || true
+        
+        # Copy AST-grep config if it doesn't exist
+        if [ ! -f "ast-grep/config.yml" ]; then
+          mkdir -p ast-grep
+          cp ${{ github.action_path }}/ast-grep/config.yml ast-grep/config.yml
+        fi
+    
+    - name: Get changed files
+      id: changed-files
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        # Get list of changed Python files in this PR
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          git fetch origin ${{ inputs.base-ref }}
+          changed_files=$(git diff --name-only origin/${{ inputs.base-ref }}...HEAD -- '*.py' | head -50)
+        else
+          # For push events, compare with previous commit
+          changed_files=$(git diff --name-only HEAD~1 HEAD -- '*.py' | head -50)
+        fi
+        
+        echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+        echo "$changed_files" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        # Also get commit SHAs
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          echo "base_sha=$(git rev-parse origin/${{ inputs.base-ref }})" >> $GITHUB_OUTPUT
+          echo "head_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        else
+          echo "base_sha=$(git rev-parse HEAD~1)" >> $GITHUB_OUTPUT
+          echo "head_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "Changed files:"
+        echo "$changed_files"
+    
+    - name: Run duplicate logic detection
+      id: detect
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+        REPOSITORY: ${{ inputs.repository }}
+        BASE_SHA: ${{ steps.changed-files.outputs.base_sha }}
+        HEAD_SHA: ${{ steps.changed-files.outputs.head_sha }}
+        SIMILARITY_THRESHOLD: ${{ inputs.similarity-threshold }}
+      run: |
+        # Filter changed files based on include/exclude patterns
+        changed_files="${{ steps.changed-files.outputs.changed_files }}"
+        
+        if [ -z "$changed_files" ]; then
+          echo "No Python files changed"
+          echo "duplicates_found=false" >> $GITHUB_OUTPUT
+          echo "match_count=0" >> $GITHUB_OUTPUT
+          echo "high_confidence_count=0" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+        
+        # Run the duplicate detection
+        uv run python duplicate_logic_detector.py \
+          --pr-number "$PR_NUMBER" \
+          --repository "$REPOSITORY" \
+          --base-sha "$BASE_SHA" \
+          --head-sha "$HEAD_SHA" \
+          --changed-files "$changed_files" \
+          --output-format github-actions \
+          --repository-path "."
+        
+        # Set outputs based on results
+        if [ -f "duplicate-logic-report.json" ]; then
+          match_count=$(uv run python -c "
+        import json
+        try:
+            with open('duplicate-logic-report.json', 'r') as f:
+                data = json.load(f)
+            print(data['summary']['total_matches'])
+        except:
+            print('0')
+          ")
+          
+          high_confidence_count=$(uv run python -c "
+        import json
+        try:
+            with open('duplicate-logic-report.json', 'r') as f:
+                data = json.load(f)
+            print(data['summary']['high_confidence'])
+        except:
+            print('0')
+          ")
+          
+          echo "match_count=$match_count" >> $GITHUB_OUTPUT
+          echo "high_confidence_count=$high_confidence_count" >> $GITHUB_OUTPUT
+          echo "report_path=duplicate-logic-report.json" >> $GITHUB_OUTPUT
+          
+          if [ "$high_confidence_count" -gt 0 ]; then
+            echo "duplicates_found=true" >> $GITHUB_OUTPUT
+          else
+            echo "duplicates_found=false" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "duplicates_found=false" >> $GITHUB_OUTPUT
+          echo "match_count=0" >> $GITHUB_OUTPUT
+          echo "high_confidence_count=0" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Upload analysis results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: duplicate-logic-analysis-${{ github.run_id }}
+        path: |
+          duplicate-logic-report.json
+          duplicate-logic-report.md
+        retention-days: 30
+    
+    - name: Comment on PR
+      if: steps.detect.outputs.duplicates_found == 'true' && inputs.post-comment == 'true' && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const fs = require('fs');
+          
+          try {
+            const reportPath = 'duplicate-logic-report.md';
+            if (fs.existsSync(reportPath)) {
+              const report = fs.readFileSync(reportPath, 'utf8');
+              
+              await github.rest.issues.createComment({
+                issue_number: ${{ inputs.pr-number }},
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: report
+              });
+              
+              console.log('Posted duplicate logic detection results to PR');
+            }
+          } catch (error) {
+            console.error('Error posting comment:', error);
+          }
+    
+    - name: Fail if duplicates found
+      if: steps.detect.outputs.duplicates_found == 'true' && inputs.fail-on-duplicates == 'true'
+      shell: bash
+      run: |
+        echo "❌ High-confidence duplicate logic detected!"
+        echo "Found ${{ steps.detect.outputs.high_confidence_count }} high-confidence matches"
+        echo "Please review the duplicate logic report and consider refactoring before merging."
+        exit 1

@@ -1,0 +1,96 @@
+id: duplicate-business-logic
+language: python
+severity: warning
+message: >-
+  This business logic pattern may already exist elsewhere in the codebase.
+note: |
+  Business logic patterns that commonly get duplicated:
+  - User permission checks
+  - Data transformation workflows
+  - Calculation and computation logic
+  - Integration with external services
+  - Error handling and retry logic
+
+rule:
+  any:
+    # Pattern 1: Permission/access control logic
+    - all:
+        - pattern: |
+            if $USER.$PERMISSION_CHECK:
+                $$$
+            else:
+                $ERROR_HANDLING
+        - inside:
+            kind: function_definition
+            
+    # Pattern 2: Data transformation pipelines
+    - all:
+        - pattern: |
+            def transform_$DATA($INPUT):
+                $STEP1
+                $STEP2  
+                $STEP3
+                return $RESULT
+        - inside:
+            any:
+              - pattern: $$.map($$$)
+              - pattern: $$.filter($$$)
+              - pattern: $$.reduce($$$)
+              - pattern: for $ITEM in $COLLECTION
+              
+    # Pattern 3: Calculation logic with similar operations
+    - all:
+        - pattern: |
+            def calculate_$METRIC($$$):
+                $$$
+                return $CALCULATION
+        - inside:
+            any:
+              - pattern: sum($$$)
+              - pattern: max($$$)
+              - pattern: min($$$)
+              - pattern: $A + $B
+              - pattern: $A * $B
+              - pattern: $A / $B
+              
+    # Pattern 4: External service integration
+    - all:
+        - pattern: |
+            def $SERVICE_$ACTION($$$):
+                $$$
+        - inside:
+            any:
+              - pattern: requests.$METHOD($$$)
+              - pattern: $CLIENT.$METHOD($$$)
+              - pattern: $API_CALL($$$)
+              
+    # Pattern 5: Retry and error handling logic
+    - all:
+        - pattern: |
+            for $ATTEMPT in range($RETRIES):
+                try:
+                    $OPERATION
+                    break
+                except $EXCEPTION:
+                    $RETRY_LOGIC
+                    
+    # Pattern 6: Database query patterns
+    - all:
+        - pattern: |
+            def get_$ENTITY_by_$FIELD($VALUE):
+                $$$
+                return session.query($MODEL).filter($CONDITION).first()
+                
+transforms:
+  DATA:
+    regex: '^(user|customer|order|product|document|payment|invoice).*'
+  METRIC:
+    regex: '^(total|average|count|sum|max|min|percentage|rate).*'
+  SERVICE:
+    regex: '^(api|service|client|integration).*'
+  ACTION:
+    regex: '^(call|request|send|fetch|get|post|put|delete).*'
+  ENTITY:
+    regex: '^(user|customer|order|product|document|file|record).*'
+  FIELD:
+    regex: '^(id|email|name|status|type|category).*'

@@ -1,0 +1,116 @@
+# Duplicate Logic Detection Configuration
+
+# Analysis thresholds (0.0 to 1.0)
+thresholds:
+  exact_match: 0.95          # Nearly identical code
+  high_similarity: 0.80      # Very similar logic
+  moderate_similarity: 0.60  # Somewhat similar logic
+  
+# Weights for similarity calculation
+similarity_weights:
+  signature: 0.30      # Function signature similarity
+  semantic: 0.40       # Semantic content similarity  
+  ast_structure: 0.20  # AST structure similarity
+  function_calls: 0.10 # Function calls overlap
+
+# Files and directories to analyze
+include_patterns:
+  - "src/**/*.py"
+  - "tests/**/*.py"
+
+# Files and directories to exclude from analysis
+exclude_patterns:
+  - "generated/**"
+  - "migrations/**"
+  - "vendor/**"
+  - "**/__pycache__/**"
+  - "**/*.pyc"
+  - "**/conftest.py"
+  - "**/test_*.py"      # Exclude test files from duplicate detection
+  - "**/*_test.py"
+
+# Function patterns to ignore (regex patterns)
+ignore_function_patterns:
+  - "^test_.*"          # Test functions
+  - "^_.*"              # Private functions (often utilities)
+  - "^setup.*"          # Setup functions
+  - "^teardown.*"       # Teardown functions
+  - "^mock_.*"          # Mock functions
+  - "^fixture_.*"       # Fixture functions
+
+# Minimum function complexity to analyze
+min_complexity: 2
+
+# Minimum function length (lines) to analyze  
+min_function_lines: 5
+
+# Keywords that indicate domain-specific logic worth checking
+domain_keywords:
+  - "user"
+  - "auth"
+  - "data" 
+  - "api"
+  - "service"
+  - "util"
+  - "helper"
+  - "process"
+  - "validate"
+  - "calculate"
+  - "transform"
+  - "parse"
+  - "format"
+  - "convert"
+
+# Function name patterns that commonly indicate duplicates
+common_duplicate_patterns:
+  validation:
+    - "validate_*"
+    - "check_*" 
+    - "verify_*"
+    - "is_valid_*"
+  data_processing:
+    - "process_*"
+    - "transform_*"
+    - "convert_*"
+    - "parse_*"
+    - "format_*"
+  crud_operations:
+    - "create_*"
+    - "update_*" 
+    - "delete_*"
+    - "get_*"
+    - "find_*"
+    - "fetch_*"
+  calculations:
+    - "calculate_*"
+    - "compute_*"
+    - "sum_*"
+    - "count_*"
+    - "total_*"
+
+# Reporting configuration
+reporting:
+  # Maximum number of matches to show in PR comments
+  max_pr_comment_matches: 5
+  
+  # Only report matches above this confidence level in PR comments
+  pr_comment_min_confidence: "high"  # very_high, high, medium, low
+  
+  # Include suggestions in reports
+  include_suggestions: true
+  
+  # Include code snippets in detailed reports
+  include_code_snippets: false
+
+# GitHub Actions integration
+github_actions:
+  # Set to true to fail the CI pipeline if high-confidence duplicates are found
+  fail_on_duplicates: false
+  
+  # Confidence levels that should trigger warnings
+  warning_confidence_levels:
+    - "very_high" 
+    - "high"
+    
+  # Create GitHub check runs for duplicate detection
+  create_check_runs: true
