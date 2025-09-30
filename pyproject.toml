@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "duplicate-logic-detector-action"
-version = "1.0.1"
+version = "1.0.2"
 description = "A GitHub Action that detects duplicate logic in Python code using AST analysis and semantic similarity"
 authors = [
     {name = "Arthur Morais", email = "arthurfmmorais@gmail.com"}

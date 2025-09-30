@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2025-09-30
+
+### Fixed
+- **JSON Serialization Error**: Fixed "Object of type set is not JSON serializable" error by converting Set fields to List in CodeFunction dataclass
+- **Deprecated GitHub Actions Commands**: Replaced deprecated `::set-output` commands with environment files to eliminate warnings
+- Improved compatibility with GitHub Actions runtime environment
+
 ## [1.0.1] - 2025-09-30
 
 ### Fixed

@@ -58,8 +58,8 @@ class CodeFunction:
     signature: str
     docstring: Optional[str]
     body_hash: str
-    imports: Set[str]
-    calls: Set[str]
+    imports: List[str]  # Changed from Set to List for JSON serialization
+    calls: List[str]    # Changed from Set to List for JSON serialization
     complexity_score: float
     ast_structure: str
     
@@ -195,23 +195,29 @@ class ASTAnalyzer:
     
     def _extract_imports(self, node: ast.AST) -> Set[str]:
         """Extract all imports used within a function."""
-        imports = set()
+        imports = []
         for child in ast.walk(node):
             if isinstance(child, ast.Name):
-                imports.add(child.id)
+                if child.id not in imports:
+                    imports.append(child.id)
             elif isinstance(child, ast.Attribute):
-                imports.add(ast.unparse(child))
+                attr_str = ast.unparse(child)
+                if attr_str not in imports:
+                    imports.append(attr_str)
         return imports
     
     def _extract_function_calls(self, node: ast.AST) -> Set[str]:
         """Extract all function calls within a function."""
-        calls = set()
+        calls = []
         for child in ast.walk(node):
             if isinstance(child, ast.Call):
                 if isinstance(child.func, ast.Name):
-                    calls.add(child.func.id)
+                    if child.func.id not in calls:
+                        calls.append(child.func.id)
                 elif isinstance(child.func, ast.Attribute):
-                    calls.add(ast.unparse(child.func))
+                    func_str = ast.unparse(child.func)
+                    if func_str not in calls:
+                        calls.append(func_str)
         return calls
     
     def _calculate_complexity(self, node: ast.AST) -> float:
@@ -502,7 +508,9 @@ class DuplicateLogicDetector:
         
         # 5. Function calls overlap
         if func1.calls and func2.calls:
-            calls_overlap = len(func1.calls & func2.calls) / len(func1.calls | func2.calls)
+            calls_set1 = set(func1.calls)
+            calls_set2 = set(func2.calls)
+            calls_overlap = len(calls_set1 & calls_set2) / len(calls_set1 | calls_set2)
             scores.append(calls_overlap * 0.15)
             if calls_overlap > 0.3:
                 reasons.append(f"Similar function calls ({calls_overlap:.2f})")
@@ -705,8 +713,10 @@ def main():
             significant_matches = [m for m in matches if m.confidence in ['high', 'very_high']]
             
             if significant_matches:
-                print(f"::set-output name=duplicates_found::true")
-                print(f"::set-output name=match_count::{len(significant_matches)}")
+                # Use environment files instead of deprecated set-output
+                with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                    f.write(f"duplicates_found=true\n")
+                    f.write(f"match_count={len(significant_matches)}\n")
                 
                 # Generate markdown report
                 comment = report_gen.generate_github_comment(matches)
@@ -715,8 +725,10 @@ def main():
                 
                 console.print(f"[yellow]Found {len(significant_matches)} potential duplicates[/yellow]")
             else:
-                print(f"::set-output name=duplicates_found::false")
-                print(f"::set-output name=match_count::0")
+                # Use environment files instead of deprecated set-output
+                with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                    f.write(f"duplicates_found=false\n")
+                    f.write(f"match_count=0\n")
                 console.print("[green]No significant duplicates found[/green]")
             
             # Always generate JSON report
