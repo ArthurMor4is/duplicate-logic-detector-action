@@ -213,9 +213,9 @@ We use [Semantic Versioning](https://semver.org/):
 ## 🤝 Community
 
 ### Getting Help
-- 📖 [Documentation](https://github.com/arthurfernandesdemorais/duplicate-logic-detector-action/wiki)
-- 🐛 [Issues](https://github.com/arthurfernandesdemorais/duplicate-logic-detector-action/issues)
-- 💬 [Discussions](https://github.com/arthurfernandesdemorais/duplicate-logic-detector-action/discussions)
+- 📖 [Documentation](https://github.com/ArthurMor4is/duplicate-logic-detector-action/wiki)
+- 🐛 [Issues](https://github.com/ArthurMor4is/duplicate-logic-detector-action/issues)
+- 💬 [Discussions](https://github.com/ArthurMor4is/duplicate-logic-detector-action/discussions)
 
 ### Code of Conduct
 Please be respectful and inclusive. We welcome contributions from everyone regardless of experience level.

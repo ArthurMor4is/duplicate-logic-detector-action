@@ -7,7 +7,7 @@ name = "duplicate-logic-detector-action"
 version = "1.0.0"
 description = "A GitHub Action that detects duplicate logic in Python code using AST analysis and semantic similarity"
 authors = [
-    {name = "Talisman Team", email = "team@talisman.dev"}
+    {name = "Arthur Morais", email = "arthurfmmorais@gmail.com"}
 ]
 readme = "README.md"
 license = {text = "MIT"}
@@ -59,11 +59,11 @@ run-tests = "run_tests:main"
 packages = ["scripts"]
 
 [project.urls]
-Homepage = "https://github.com/arthurfernandesdemorais/duplicate-logic-detector-action"
-Repository = "https://github.com/arthurfernandesdemorais/duplicate-logic-detector-action"
-Issues = "https://github.com/arthurfernandesdemorais/duplicate-logic-detector-action/issues"
-Documentation = "https://github.com/arthurfernandesdemorais/duplicate-logic-detector-action/wiki"
-Changelog = "https://github.com/arthurfernandesdemorais/duplicate-logic-detector-action/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/ArthurMor4is/duplicate-logic-detector-action"
+Repository = "https://github.com/ArthurMor4is/duplicate-logic-detector-action"
+Issues = "https://github.com/ArthurMor4is/duplicate-logic-detector-action/issues"
+Documentation = "https://github.com/ArthurMor4is/duplicate-logic-detector-action/wiki"
+Changelog = "https://github.com/ArthurMor4is/duplicate-logic-detector-action/blob/main/CHANGELOG.md"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
