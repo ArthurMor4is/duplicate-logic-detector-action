@@ -221,10 +221,9 @@ test-reports/
 duplicate-logic-report.json
 duplicate-logic-report.md
 
-# AST-grep artifacts
-ast-grep/
-!ast-grep/rules/
-!ast-grep/config.yml
+# AST-grep artifacts (keep rules and config)
+ast-grep/sgconfig.yml
+ast-grep/.sg/
 
 # GitHub Actions artifacts
 .github/workflows/test-results/

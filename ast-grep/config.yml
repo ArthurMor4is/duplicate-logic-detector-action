@@ -1,0 +1,24 @@
+# AST-grep configuration for duplicate logic detection
+rules:
+  - python/duplicate-logic/duplicate-business-logic.yml
+  - python/duplicate-logic/similar-function-patterns.yml
+
+# Language configuration
+languages:
+  python:
+    extensions: [py, pyi]
+    
+# Output configuration  
+output:
+  format: json
+  color: true
+  
+# Search configuration
+search:
+  include: ["**/*.py"]
+  exclude: 
+    - "**/__pycache__/**"
+    - "**/test_*.py" 
+    - "**/tests/**"
+    - "**/.venv/**"
+    - "**/venv/**"
