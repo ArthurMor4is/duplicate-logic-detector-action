@@ -5,8 +5,7 @@ to test the sensitivity of the duplicate detection algorithm.
 """
 
 import re
-import json
-from typing import List, Dict, Optional, Union
+from typing import List, Dict
 
 
 def validate_phone_number(phone: str) -> bool:
