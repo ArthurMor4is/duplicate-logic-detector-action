@@ -20,9 +20,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Detect Duplicate Logic
-        uses: your-org/duplicate-logic-detector-action@v1
+        uses: ArthurMor4is/duplicate-logic-detector-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          similarity-threshold: '0.7'
           post-comment: true
           fail-on-duplicates: false

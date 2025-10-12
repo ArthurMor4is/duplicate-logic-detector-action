@@ -21,58 +21,43 @@ jobs:
         with:
           fetch-depth: 0
       
-      - uses: your-org/duplicate-logic-detector-action@v1
+      - uses: ArthurMor4is/duplicate-logic-detector-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-### 2. Custom Configuration
-
-Create `.duplicate-logic-config.yml` in your repository:
+### 2. Advanced Usage
 
 ```yaml
-thresholds:
-  high_similarity: 0.80
-  moderate_similarity: 0.60
-
-include_patterns:
-  - "src/**/*.py"
-  - "lib/**/*.py"
-
-exclude_patterns:
-  - "tests/**"
-  - "migrations/**"
-  - "generated/**"
-
-reporting:
-  max_pr_comment_matches: 3
-  pr_comment_min_confidence: "high"
+- name: Detect Duplicate Logic with Custom Settings
+  uses: ArthurMor4is/duplicate-logic-detector-action@v1
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    post-comment: true
+    fail-on-duplicates: false
 ```
 
-## Configuration Options
+## Input Parameters
 
-### Similarity Thresholds
+| Parameter | Description | Required | Default |
+|-----------|-------------|----------|---------|
+| `github-token` | GitHub token for API access | ✅ | `${{ github.token }}` |
+| `pr-number` | Pull request number | ❌ | `${{ github.event.number }}` |
+| `repository` | Repository name (owner/repo) | ❌ | `${{ github.repository }}` |
+| `base-ref` | Base reference for comparison | ❌ | `${{ github.base_ref }}` |
+| `head-ref` | Head reference for comparison | ❌ | `${{ github.head_ref }}` |
+| `post-comment` | Post findings as PR comment | ❌ | `true` |
+| `fail-on-duplicates` | Fail if high-confidence duplicates found | ❌ | `false` |
 
-- `exact_match`: 0.90 (90%+ similarity)
-- `high_similarity`: 0.70 (70%+ similarity) 
-- `moderate_similarity`: 0.50 (50%+ similarity)
+## Detection Process
 
-### File Patterns
+The action automatically:
 
-Use glob patterns to include/exclude files:
-
-```yaml
-include_patterns:
-  - "src/**/*.py"     # All Python files in src/
-  - "app/**/*.py"     # All Python files in app/
-  - "*.py"            # Python files in root
-
-exclude_patterns:
-  - "tests/**"        # Exclude all test files
-  - "migrations/**"   # Exclude database migrations
-  - "**/test_*.py"    # Exclude files starting with test_
-  - "**/*_test.py"    # Exclude files ending with _test.py
-```
+1. **Detects Changed Files**: Identifies Python files modified in the PR
+2. **Extracts Functions**: Parses functions from changed files using AST analysis
+3. **Compares Against Existing Code**: Uses token-based Jaccard similarity
+4. **Reports Findings**: Creates detailed reports and optional PR comments
+5. **Uploads Artifacts**: Stores analysis results for review
 
 ## Examples
 
@@ -88,7 +73,6 @@ The action provides these outputs:
 
 - `duplicates-found`: boolean - Whether duplicates were detected
 - `match-count`: number - Total number of matches found
-- `high-confidence-count`: number - High-confidence matches
 - `report-path`: string - Path to detailed report
 
 Use outputs in subsequent steps:
@@ -97,16 +81,16 @@ Use outputs in subsequent steps:
 - name: Check results
   if: steps.duplicates.outputs.duplicates-found == 'true'
   run: |
-    echo "Found ${{ steps.duplicates.outputs.high-confidence-count }} duplicates"
+    echo "Found ${{ steps.duplicates.outputs.match-count }} duplicates"
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **No duplicates detected**: Lower similarity threshold
-2. **Too many false positives**: Increase threshold or add exclusions
-3. **Action fails**: Check token permissions and file patterns
+1. **No duplicates detected**: The action uses conservative similarity thresholds by default
+2. **Action fails**: Check that your repository has Python files and proper token permissions
+3. **Missing PR comments**: Ensure `post-comment` is set to `true` and the token has write permissions
 
 ### Debug Mode
 
@@ -116,3 +100,11 @@ Enable debug logging:
 env:
   ACTIONS_STEP_DEBUG: true
 ```
+
+### Report Artifacts
+
+The action uploads analysis results as GitHub Actions artifacts:
+- `duplicate-logic-report.json` - Detailed JSON report
+- `duplicate-logic-report.md` - Human-readable Markdown report
+
+Access these from the Actions run page under "Artifacts".
