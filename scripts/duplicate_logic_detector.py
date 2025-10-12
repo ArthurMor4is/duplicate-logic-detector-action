@@ -236,7 +236,7 @@ class DuplicateLogicDetector:
     def _index_existing_functions(self):
         """Index all functions in the existing codebase."""
         python_files = []
-        python_files.extend(self.repo_path.glob("*.py"))
+        python_files.extend(self.repo_path.glob("**/*.py"))
 
         for file_path in python_files:
             if file_path.is_file():
