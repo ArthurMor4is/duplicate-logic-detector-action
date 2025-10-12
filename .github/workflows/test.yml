@@ -20,18 +20,66 @@ jobs:
         run: |
           echo "Creating test files..."
           mkdir -p test_files
+          
+          # Create original function in existing codebase
           cat > test_files/original.py << 'EOF'
           def validate_email(email):
               import re
               pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
               return re.match(pattern, email) is not None
+              
+          def calculate_discount(price, percentage):
+              return price * (percentage / 100)
+              
+          def format_currency(amount):
+              return f"${amount:.2f}"
           EOF
           
+          # Create duplicate functions that will be detected
           cat > test_files/duplicate.py << 'EOF'
           def check_email_format(email_addr):
               import re
               regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
               return re.match(regex, email_addr) is not None
+              
+          def compute_discount(price, percentage):
+              return price * (percentage / 100)
+              
+          def format_money(amount):
+              return f"${amount:.2f}"
+          EOF
+          
+          # Create another file with more obvious duplicates
+          cat > test_files/utils.py << 'EOF'
+          def process_user_data(user_info):
+              if user_info.get('age', 0) >= 18:
+                  return "adult"
+              else:
+                  return "minor"
+                  
+          def validate_phone_number(phone):
+              import re
+              pattern = r'^\+?1?\d{9,15}$'
+              return re.match(pattern, phone) is not None
+          EOF
+          
+          # Create a file that will be "changed" in the PR
+          cat > test_files/new_feature.py << 'EOF'
+          def handle_user_data(user_info):
+              if user_info.get('age', 0) >= 18:
+                  return "adult"
+              else:
+                  return "minor"
+                  
+          def check_phone_format(phone):
+              import re
+              pattern = r'^\+?1?\d{9,15}$'
+              return re.match(pattern, phone) is not None
+              
+          def email_validation(email):
+              import re
+              regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+              return re.match(regex, email) is not None
           EOF
 
       - name: Test the action
@@ -39,8 +87,7 @@ jobs:
         id: test
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          similarity-threshold: 0.6
-          post-comment: false
+          post-comment: true
           fail-on-duplicates: false
         continue-on-error: true
 
@@ -48,8 +95,42 @@ jobs:
         run: |
           echo "Duplicates found: ${{ steps.test.outputs.duplicates-found }}"
           echo "Match count: ${{ steps.test.outputs.match-count }}"
-          echo "High confidence count: ${{ steps.test.outputs.high-confidence-count }}"
           echo "Report path: ${{ steps.test.outputs.report-path }}"
+          
+          # Verify that the action detected our intentional duplicates
+          if [ "${{ steps.test.outputs.duplicates-found }}" = "true" ]; then
+            echo "✅ Successfully detected duplicate functions!"
+            echo "📊 Found ${{ steps.test.outputs.match-count }} duplicate matches"
+          else
+            echo "⚠️  No duplicates detected - this may indicate an issue with the test setup"
+          fi
+          
+          # Check if report files were generated
+          if [ -f "duplicate-logic-report.json" ]; then
+            echo "✅ JSON report generated successfully"
+            echo "📄 Report contains:"
+            python -c "
+          import json
+          try:
+              with open('duplicate-logic-report.json', 'r') as f:
+                  data = json.load(f)
+              print(f\"  - Total matches: {data['summary']['total_matches']}\")
+              if data.get('matches'):
+                  print(f\"  - First match: {data['matches'][0]['new_function']['name']} -> {data['matches'][0]['existing_function']['name']}\")
+                  print(f\"  - Similarity: {data['matches'][0]['similarity_score']:.1%}\")
+          except Exception as e:
+              print(f\"  - Error reading report: {e}\")
+          "
+          else
+            echo "⚠️  JSON report not found"
+          fi
+          
+          if [ -f "duplicate-logic-report.md" ]; then
+            echo "✅ Markdown report generated successfully"
+          else
+            echo "⚠️  Markdown report not found"
+          fi
+          
           echo "✅ Action test completed successfully"
 
   unit-tests:
