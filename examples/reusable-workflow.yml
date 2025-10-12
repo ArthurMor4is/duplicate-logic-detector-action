@@ -6,12 +6,17 @@ on:
 
 jobs:
   duplicate-logic:
-    uses: your-org/duplicate-logic-detector-action/.github/workflows/duplicate-logic-detection.yml@v1
-    with:
-      similarity-threshold: '0.8'
-      fail-on-duplicates: false
-      include-patterns: '["src/**/*.py", "lib/**/*.py", "app/**/*.py"]'
-      exclude-patterns: '["tests/**", "migrations/**", "generated/**"]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Detect Duplicate Logic
+        uses: ArthurMor4is/duplicate-logic-detector-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          fail-on-duplicates: false
     permissions:
       contents: read
       pull-requests: write

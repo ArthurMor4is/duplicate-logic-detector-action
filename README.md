@@ -47,10 +47,12 @@ jobs:
 | Parameter | Description | Required | Default |
 |-----------|-------------|----------|---------|
 | `github-token` | GitHub token for API access | ✅ | `${{ github.token }}` |
-| `similarity-threshold` | Minimum similarity for reporting (0.0-1.0) | ❌ | `0.7` |
+| `pr-number` | Pull request number | ❌ | `${{ github.event.number }}` |
+| `repository` | Repository name (owner/repo) | ❌ | `${{ github.repository }}` |
+| `base-ref` | Base reference for comparison | ❌ | `${{ github.base_ref }}` |
+| `head-ref` | Head reference for comparison | ❌ | `${{ github.head_ref }}` |
 | `post-comment` | Post findings as PR comment | ❌ | `true` |
 | `fail-on-duplicates` | Fail if high-confidence duplicates found | ❌ | `false` |
-| `config-file` | Custom configuration file path | ❌ | `.duplicate-logic-config.yml` |
 
 ## 📊 Outputs
 
@@ -58,47 +60,54 @@ jobs:
 |--------|-------------|
 | `duplicates-found` | Whether any duplicates were detected |
 | `match-count` | Total number of matches found |
-| `high-confidence-count` | Number of high-confidence matches |
 | `report-path` | Path to the generated report file |
 
-## ⚙️ Advanced Configuration
+## ⚙️ Usage Examples
 
-Create `.duplicate-logic-config.yml` in your repository:
-
+### Basic Usage
 ```yaml
-thresholds:
-  high_similarity: 0.80
-  moderate_similarity: 0.60
+- name: Detect Duplicate Logic
+  uses: ArthurMor4is/duplicate-logic-detector-action@v1
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+```
 
-include_patterns:
-  - "src/**/*.py"
-  - "lib/**/*.py"
+### Strict Mode (Fail on Duplicates)
+```yaml
+- name: Detect Duplicate Logic
+  uses: ArthurMor4is/duplicate-logic-detector-action@v1
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    fail-on-duplicates: true
+```
 
-exclude_patterns:
-  - "tests/**"
-  - "migrations/**"
-
-reporting:
-  max_pr_comment_matches: 3
-  include_suggestions: true
+### Silent Mode (No PR Comments)
+```yaml
+- name: Detect Duplicate Logic
+  uses: ArthurMor4is/duplicate-logic-detector-action@v1
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    post-comment: false
 ```
 
 ## 🔍 Detection Strategies
 
+The action uses token-based Jaccard similarity analysis to detect duplicate logic patterns:
+
 ### 1. AST Analysis
-- Structural code comparison
-- Function signature matching
-- Import and dependency analysis
+- Parses Python files to extract function definitions
+- Analyzes function signatures and structure
+- Identifies code patterns and complexity
 
-### 2. Semantic Similarity
-- TF-IDF vectorization
-- Cosine similarity calculation
-- Natural language processing of docstrings
+### 2. Token-Based Similarity
+- Converts functions to token representations
+- Uses Jaccard similarity coefficient for comparison
+- Focuses on logical structure over exact text matching
 
-### 3. Pattern Recognition
-- Business logic patterns (validation, CRUD, calculations)
-- Common code structures
-- Function naming patterns
+### 3. Smart Filtering
+- Excludes very small functions (< 5 lines)
+- Filters out test files and common patterns
+- Prioritizes business logic and complex functions
 
 ## 📈 Example Output
 
@@ -135,6 +144,8 @@ make test
 # Run sample analysis
 make test-sample
 ```
+
+**Note**: The `config/default-config.yml` file is used for development and testing purposes only. The GitHub Action uses built-in configuration optimized for CI/CD workflows.
 
 ## 📚 Documentation
 
