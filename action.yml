@@ -69,30 +69,7 @@ runs:
     
     - name: Install dependencies
       shell: bash
-      run: |
-        # Install action dependencies using pip
-        pip install --upgrade pip
-        pip install \
-          GitPython==3.1.45 \
-          PyGithub==2.8.1 \
-          scikit-learn==1.7.2 \
-          nltk==3.9.1 \
-          rich==14.1.0 \
-          "numpy>=1.24.0" \
-          "pandas>=2.0.0" \
-          "pyyaml>=6.0"
-        
-        # Download required NLTK data
-        python -c "
-        import nltk
-        try:
-            nltk.data.find('tokenizers/punkt')
-            nltk.data.find('corpora/stopwords')
-        except LookupError:
-            nltk.download('punkt', quiet=True)
-            nltk.download('stopwords', quiet=True)
-        "
-    
+      run: ${{ github.action_path }}/scripts/action/install-dependencies.sh
     
     - name: Copy detection scripts
       shell: bash
@@ -104,83 +81,21 @@ runs:
     - name: Get changed files
       id: changed-files
       shell: bash
-      run: |
-        # Get list of changed Python files in this PR
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          git fetch origin ${{ inputs.base-ref }}
-          changed_files=$(git diff --name-only origin/${{ inputs.base-ref }}...HEAD -- '*.py' | head -50)
-        else
-          # For push events, compare with previous commit
-          changed_files=$(git diff --name-only HEAD~1 HEAD -- '*.py' | head -50)
-        fi
-        
-        echo "changed_files<<EOF" >> $GITHUB_OUTPUT
-        echo "$changed_files" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
-        
-        # Also get commit SHAs
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          echo "base_sha=$(git rev-parse origin/${{ inputs.base-ref }})" >> $GITHUB_OUTPUT
-          echo "head_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-        else
-          echo "base_sha=$(git rev-parse HEAD~1)" >> $GITHUB_OUTPUT
-          echo "head_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-        fi
-        
-        echo "Changed files:"
-        echo "$changed_files"
+      env:
+        BASE_REF: ${{ inputs.base-ref }}
+        GITHUB_EVENT_NAME: ${{ github.event_name }}
+      run: ${{ github.action_path }}/scripts/action/get-changed-files.sh
     
     - name: Run duplicate logic detection
       id: detect
       shell: bash
       env:
+        CHANGED_FILES: ${{ steps.changed-files.outputs.changed_files }}
         BASE_SHA: ${{ steps.changed-files.outputs.base_sha }}
         HEAD_SHA: ${{ steps.changed-files.outputs.head_sha }}
-      run: |
-        # Get changed files
-        changed_files="${{ steps.changed-files.outputs.changed_files }}"
-        
-        if [ -z "$changed_files" ]; then
-          echo "No Python files changed"
-          echo "duplicates_found=false" >> $GITHUB_OUTPUT
-          echo "match_count=0" >> $GITHUB_OUTPUT
-          exit 0
-        fi
-        
-        # Run the duplicate detection
-        python duplicate_logic_detector.py \
-          --pr-number "${{ inputs.pr-number }}" \
-          --repository "${{ inputs.repository }}" \
-          --base-sha "$BASE_SHA" \
-          --head-sha "$HEAD_SHA" \
-          --changed-files "$changed_files" \
-          --output-format github-actions \
-          --repository-path "."
-        
-        # Set outputs based on results
-        if [ -f "duplicate-logic-report.json" ]; then
-          match_count=$(python -c "
-        import json
-        try:
-            with open('duplicate-logic-report.json', 'r') as f:
-                data = json.load(f)
-            print(data['summary']['total_matches'])
-        except:
-            print('0')
-          ")
-          
-          echo "match_count=$match_count" >> $GITHUB_OUTPUT
-          echo "report_path=duplicate-logic-report.json" >> $GITHUB_OUTPUT
-          
-          if [ "$match_count" -gt 0 ]; then
-            echo "duplicates_found=true" >> $GITHUB_OUTPUT
-          else
-            echo "duplicates_found=false" >> $GITHUB_OUTPUT
-          fi
-        else
-          echo "duplicates_found=false" >> $GITHUB_OUTPUT
-          echo "match_count=0" >> $GITHUB_OUTPUT
-        fi
+        PR_NUMBER: ${{ inputs.pr-number }}
+        REPOSITORY: ${{ inputs.repository }}
+      run: ${{ github.action_path }}/scripts/action/run-detection.sh
     
     - name: Upload analysis results
       uses: actions/upload-artifact@v4
@@ -196,28 +111,13 @@ runs:
     - name: Comment on PR
       if: steps.detect.outputs.duplicates_found == 'true' && inputs.post-comment == 'true' && github.event_name == 'pull_request'
       uses: actions/github-script@v7
+      env:
+        PR_NUMBER: ${{ inputs.pr-number }}
       with:
         github-token: ${{ inputs.github-token }}
         script: |
-          const fs = require('fs');
-          
-          try {
-            const reportPath = 'duplicate-logic-report.md';
-            if (fs.existsSync(reportPath)) {
-              const report = fs.readFileSync(reportPath, 'utf8');
-              
-              await github.rest.issues.createComment({
-                issue_number: ${{ inputs.pr-number }},
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: report
-              });
-              
-              console.log('Posted duplicate logic detection results to PR');
-            }
-          } catch (error) {
-            console.error('Error posting comment:', error);
-          }
+          const postComment = require('${{ github.action_path }}/scripts/action/post-comment.js');
+          await postComment({github, context, core});
     
     - name: Fail if duplicates found
       if: steps.detect.outputs.duplicates_found == 'true' && inputs.fail-on-duplicates == 'true'

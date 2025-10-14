@@ -12,9 +12,14 @@ Thank you for your interest in contributing! This document provides guidelines a
    ```
 3. **Install dependencies**:
    ```bash
-   make install
-   # or
+   # Recommended: Use uv for fast dependency management
    uv sync --all-extras
+   
+   # Alternative: Use make (which internally uses uv)
+   make install
+   
+   # Traditional pip approach
+   pip install -e ".[dev,test]"
    ```
 4. **Run tests**:
    ```bash
@@ -97,6 +102,80 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) specific
 - `test:` - Test changes
 - `refactor:` - Code refactoring
 - `chore:` - Maintenance tasks
+
+## 📦 Dependencies & Environment
+
+### Dependency Groups
+The project uses `pyproject.toml` with organized dependency groups:
+
+```toml
+# No core dependencies - keep it clean for action usage
+dependencies = []
+
+[project.optional-dependencies]
+# Runtime dependencies (GitHub Action execution)
+runtime = ["rich==14.1.0"]
+
+# Research dependencies (experiments and analysis)
+research = [
+    "GitPython==3.1.45",      # Git operations
+    "PyGithub==2.8.1",        # GitHub API
+    "scikit-learn==1.7.2",    # ML algorithms
+    "nltk==3.9.1",            # Natural language processing
+    "numpy>=1.24.0",          # Numerical computing
+    "pandas>=2.0.0",          # Data analysis
+    "pyyaml>=6.0",            # YAML parsing
+]
+
+# Development dependencies
+dev = ["black>=23.0.0", "isort>=5.12.0", "flake8>=6.0.0", ...]
+test = ["pytest>=7.0.0", "pytest-mock>=3.10.0", ...]
+```
+
+### Development Setup Options
+
+**Option 1: Full Development Environment**
+```bash
+# Install all dependencies (recommended for contributors)
+uv sync --all-extras
+```
+
+**Option 2: Runtime Only (Action Testing)**
+```bash
+# Install only runtime dependencies (for testing action behavior)
+uv pip install -e ".[runtime]"
+```
+
+**Option 3: Research Environment**
+```bash
+# Install research dependencies (for experiments and analysis)
+uv pip install -e ".[runtime,research]"
+```
+
+**Option 4: Specific Groups**
+```bash
+# Install specific dependency groups
+uv pip install -e ".[dev]"                    # Development tools
+uv pip install -e ".[test]"                   # Testing framework
+uv pip install -e ".[runtime,dev,test]"       # Action + dev + test
+```
+
+### Adding Dependencies
+
+When adding new dependencies:
+
+1. **Runtime Dependencies**: Add to `[project.optional-dependencies.runtime]` if needed by the GitHub Action
+2. **Core Dependencies**: Add to `dependencies` for research/experimentation features
+3. **Development Dependencies**: Add to appropriate optional group (`dev`, `test`)
+
+```bash
+# After adding dependencies, update the lock file
+uv lock
+
+# Test that the action still works with minimal dependencies
+uv pip install -e ".[runtime]"
+python scripts/duplicate_logic_detector.py --help
+```
 
 Examples:
 ```

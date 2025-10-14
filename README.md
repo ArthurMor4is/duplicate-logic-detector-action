@@ -129,17 +129,53 @@ Found 2 potential duplicates with high confidence:
 - **Suggestion**: Extract common logic into a shared utility function
 ```
 
+## 📦 Dependencies
+
+### Runtime Dependencies
+The action has minimal runtime dependencies for fast execution:
+- **[rich](https://github.com/Textualize/rich) v14.1.0** - Console output and progress bars
+
+### Development Dependencies
+For development, testing, and research, additional dependencies are available:
+- **Testing**: pytest, pytest-mock, pytest-cov, pytest-xdist
+- **Code Quality**: black, isort, flake8, mypy, pre-commit
+- **Research**: GitPython, PyGithub, scikit-learn, nltk, numpy, pandas, pyyaml
+
+### Dependency Management
+The action uses modern Python packaging with `pyproject.toml` and [uv](https://github.com/astral-sh/uv) for fast dependency management:
+
+```toml
+# Clean core dependencies
+dependencies = []
+
+# Runtime dependencies (action execution)
+[project.optional-dependencies]
+runtime = ["rich==14.1.0"]
+
+# Research dependencies (experiments)
+research = ["GitPython", "PyGithub", "scikit-learn", ...]
+
+# Development dependencies
+dev = ["black>=23.0.0", "isort>=5.12.0", ...]
+test = ["pytest>=7.0.0", "pytest-mock>=3.10.0", ...]
+```
+
 ## 🛠️ Development
 
 ```bash
 # Clone the repository
 git clone https://github.com/ArthurMor4is/duplicate-logic-detector-action.git
 
-# Install dependencies
-make install
+# Install dependencies using uv (recommended)
+uv sync --all-extras
+
+# Or using traditional pip
+pip install -e ".[dev,test]"
 
 # Run tests
 make test
+# or
+uv run pytest
 
 # Run sample analysis
 make test-sample

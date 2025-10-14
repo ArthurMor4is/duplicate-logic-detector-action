@@ -108,3 +108,29 @@ The action uploads analysis results as GitHub Actions artifacts:
 - `duplicate-logic-report.md` - Human-readable Markdown report
 
 Access these from the Actions run page under "Artifacts".
+
+## 📦 Dependencies & Performance
+
+### Lightweight Runtime
+The action is designed for fast execution with minimal dependencies:
+- **Runtime Dependencies**: Only `rich` for console output
+- **Installation Time**: ~10-15 seconds using `uv` package manager
+- **Memory Usage**: Low footprint with efficient AST analysis
+- **Execution Time**: Typically 30-60 seconds for medium-sized repositories
+
+### Dependency Management
+The action automatically manages its dependencies using:
+```yaml
+# Fast dependency installation with uv
+- name: Install dependencies
+  run: |
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.local/bin:$PATH"
+    uv pip install --system -e ".[runtime]"
+```
+
+### System Requirements
+- **Python**: 3.11+ (automatically installed by the action)
+- **Git**: Required for file change detection
+- **Memory**: ~100MB RAM during execution
+- **Disk Space**: ~50MB for dependencies and temporary files
