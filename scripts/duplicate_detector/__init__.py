@@ -12,6 +12,7 @@ from .models import CodeFunction, DuplicateMatch
 from .similarity import SimilarityAnalyzer
 from .extractor import PythonFunctionExtractor
 from .reporters import MultiFormatReporter
+from .main import main
 
 __all__ = [
     "DuplicateLogicDetector",
@@ -20,4 +21,5 @@ __all__ = [
     "SimilarityAnalyzer",
     "PythonFunctionExtractor", 
     "MultiFormatReporter",
+    "main",
 ]

@@ -14,8 +14,8 @@ import sys
 
 from rich.console import Console
 
-from duplicate_detector.detector import DuplicateLogicDetector
-from duplicate_detector.reporters import MultiFormatReporter
+from .detector import DuplicateLogicDetector
+from .reporters import MultiFormatReporter
 
 
 def main():

@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `duplicate_detector.extractor`: Python function extraction
   - `duplicate_detector.reporters`: Multi-format report generation
   - `duplicate_detector.detector`: Main orchestration class
+  - `duplicate_detector.main`: Main entry point (moved from root scripts/)
 - Added similarity threshold parameter for filtering results
 - Enhanced error handling and validation throughout
 

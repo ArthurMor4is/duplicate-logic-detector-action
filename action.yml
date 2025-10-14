@@ -79,9 +79,9 @@ runs:
     - name: Copy detection scripts
       shell: bash
       run: |
-        # Copy the detection script from the action
-        cp ${{ github.action_path }}/scripts/duplicate_logic_detector.py ./
-        chmod +x duplicate_logic_detector.py
+        # Copy the detection package from the action
+        cp -r ${{ github.action_path }}/scripts/duplicate_detector ./
+        chmod +x duplicate_detector/main.py
     
     - name: Get changed files
       id: changed-files
