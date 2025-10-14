@@ -13,6 +13,14 @@ export PATH="$HOME/.local/bin:$PATH"
 
 # Install only runtime dependencies for the action
 echo "Installing runtime dependencies..."
-uv pip install -e ".[runtime]"
+
+# Check if we're in a virtual environment or need --system flag
+if [[ -n "${VIRTUAL_ENV:-}" ]] || [[ -n "${CONDA_DEFAULT_ENV:-}" ]]; then
+    echo "Virtual environment detected, installing without --system"
+    uv pip install -e ".[runtime]"
+else
+    echo "No virtual environment detected (GitHub Actions), using --system"
+    uv pip install --system --python "$(which python)" -e ".[runtime]"
+fi
 
 echo "✅ Dependencies installed successfully!"
