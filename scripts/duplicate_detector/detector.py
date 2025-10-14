@@ -7,7 +7,7 @@ all the other modules to perform duplicate logic detection on code changes.
 
 import subprocess
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -15,6 +15,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from .extractor import PythonFunctionExtractor
 from .models import CodeFunction, DuplicateMatch
 from .similarity import SimilarityAnalyzer
+from .thresholds import ThresholdConfig
 
 
 class DuplicateLogicDetector:
@@ -30,7 +31,8 @@ class DuplicateLogicDetector:
         repository_path: str,
         similarity_method: str = "jaccard_tokens",
         min_function_lines: int = 5,
-        console: Console = None,
+        threshold_config: Optional[ThresholdConfig] = None,
+        console: Optional[Console] = None,
     ):
         """
         Initialize the duplicate logic detector.
@@ -39,6 +41,7 @@ class DuplicateLogicDetector:
             repository_path: Path to the repository root
             similarity_method: Method to use for similarity calculation
             min_function_lines: Minimum lines for a function to be analyzed
+            threshold_config: Configuration for similarity thresholds
             console: Rich console for output
         """
         self.repo_path = Path(repository_path)
@@ -48,6 +51,7 @@ class DuplicateLogicDetector:
         # Initialize the components
         self.extractor = PythonFunctionExtractor(self.console)
         self.similarity_analyzer = SimilarityAnalyzer(similarity_method)
+        self.threshold_config = threshold_config or ThresholdConfig(console=self.console)
         self.existing_functions: List[CodeFunction] = []
         
         # Log the configuration
@@ -58,7 +62,6 @@ class DuplicateLogicDetector:
         changed_files: List[str],
         base_sha: str,
         head_sha: str,
-        similarity_threshold: float = 0.0,
     ) -> List[DuplicateMatch]:
         """
         Analyze changes in a pull request for duplicate logic.
@@ -67,7 +70,6 @@ class DuplicateLogicDetector:
             changed_files: List of file paths that changed in the PR
             base_sha: Base commit SHA for comparison
             head_sha: Head commit SHA for comparison
-            similarity_threshold: Minimum similarity score to include in results
             
         Returns:
             List of duplicate matches sorted by similarity score (highest first)
@@ -104,9 +106,7 @@ class DuplicateLogicDetector:
 
                 # Find similar functions for each new function
                 for new_func in new_functions:
-                    function_matches = self._find_similar_functions(
-                        new_func, similarity_threshold
-                    )
+                    function_matches = self._find_similar_functions(new_func)
                     matches.extend(function_matches)
 
                 progress.advance(task2)
@@ -185,15 +185,12 @@ class DuplicateLogicDetector:
             self.console.print(f"[red]Error analyzing changes in {file_path}: {e}[/red]")
             return []
 
-    def _find_similar_functions(
-        self, new_func: CodeFunction, similarity_threshold: float = 0.0
-    ) -> List[DuplicateMatch]:
+    def _find_similar_functions(self, new_func: CodeFunction) -> List[DuplicateMatch]:
         """
         Find existing functions similar to the new function.
         
         Args:
             new_func: The new function to compare against existing ones
-            similarity_threshold: Minimum similarity score to include
             
         Returns:
             List of duplicate matches for this function
@@ -213,8 +210,10 @@ class DuplicateLogicDetector:
                 new_func, existing_func
             )
 
-            # Only include matches above the threshold
-            if similarity_score >= similarity_threshold:
+            # Only include matches above the configured threshold
+            if self.threshold_config.should_report_match(
+                similarity_score, new_func.file_path
+            ):
                 match = DuplicateMatch(
                     new_function=new_func,
                     existing_function=existing_func,
@@ -226,7 +225,7 @@ class DuplicateLogicDetector:
 
     def get_configuration_info(self) -> dict:
         """Get information about the current detector configuration."""
-        return {
+        config = {
             "repository_path": str(self.repo_path),
             "similarity_method": self.similarity_analyzer.current_method,
             "similarity_description": self.similarity_analyzer.current_method_description,
@@ -236,6 +235,11 @@ class DuplicateLogicDetector:
                 self.similarity_analyzer.get_available_methods().keys()
             ),
         }
+        
+        # Add threshold configuration
+        config.update(self.threshold_config.get_configuration_summary())
+        
+        return config
 
     def print_configuration(self) -> None:
         """Print the current detector configuration."""
@@ -247,6 +251,10 @@ class DuplicateLogicDetector:
         self.console.print(f"Description: {config['similarity_description']}")
         self.console.print(f"Min Function Lines: {config['min_function_lines']}")
         self.console.print(f"Indexed Functions: {config['indexed_functions']}")
+        
+        # Print threshold configuration
+        self.console.print("")
+        self.threshold_config.print_configuration()
 
 
 class GitChangeAnalyzer:
@@ -257,7 +265,7 @@ class GitChangeAnalyzer:
     what changed in a pull request.
     """
 
-    def __init__(self, repo_path: Path, console: Console = None):
+    def __init__(self, repo_path: Path, console: Optional[Console] = None):
         """
         Initialize the Git change analyzer.
         
