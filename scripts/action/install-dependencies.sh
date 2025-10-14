@@ -13,6 +13,6 @@ export PATH="$HOME/.local/bin:$PATH"
 
 # Install only runtime dependencies for the action
 echo "Installing runtime dependencies..."
-uv pip install --system -e ".[runtime]"
+uv pip install -e ".[runtime]"
 
 echo "✅ Dependencies installed successfully!"
