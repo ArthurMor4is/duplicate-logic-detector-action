@@ -1,0 +1,58 @@
+name: Different Similarity Methods Example
+
+on:
+  pull_request:
+    paths: ['**/*.py']
+
+jobs:
+  # Example using Jaccard Tokens (default, fast, good for general use)
+  jaccard-check:
+    name: Duplicate Check - Jaccard Tokens
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Detect Duplicates with Jaccard
+        uses: ArthurMor4is/duplicate-logic-detector-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          similarity-method: jaccard_tokens
+          post-comment: true
+
+  # Example using Sequence Matcher (balanced approach)
+  sequence-check:
+    name: Duplicate Check - Sequence Matcher
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Detect Duplicates with Sequence Matcher
+        uses: ArthurMor4is/duplicate-logic-detector-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          similarity-method: sequence_matcher
+          post-comment: false  # Don't comment to avoid duplicates
+
+  # Example using Levenshtein (most thorough, best precision)
+  levenshtein-check:
+    name: Duplicate Check - Levenshtein
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Detect Duplicates with Levenshtein
+        uses: ArthurMor4is/duplicate-logic-detector-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          similarity-method: levenshtein_norm
+          fail-on-duplicates: true  # Strict mode for critical projects
+          post-comment: false

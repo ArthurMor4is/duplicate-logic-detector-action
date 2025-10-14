@@ -1,13 +1,10 @@
 import pytest
 import tempfile
-import os
 from pathlib import Path
-import sys
 
-# Add the scripts directory to the path so we can import the detector
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
-
-from duplicate_logic_detector import DuplicateMatch, DuplicateLogicDetector, CodeFunction
+from scripts.duplicate_detector.models import CodeFunction, DuplicateMatch
+from scripts.duplicate_detector.detector import DuplicateLogicDetector  
+from scripts.duplicate_detector.similarity import SimilarityAnalyzer
 
 
 class TestCodeFunction:
@@ -117,7 +114,8 @@ def filter_active_items(items):
         """Test detector initialization."""
         assert detector is not None
         assert hasattr(detector, 'repo_path')
-        assert hasattr(detector, 'ast_analyzer')
+        assert hasattr(detector, 'extractor')
+        assert hasattr(detector, 'similarity_analyzer')
         assert hasattr(detector, 'existing_functions')
     
     def test_extract_functions_from_file(self, detector, temp_repo):
@@ -133,7 +131,7 @@ class TestClass:
         return y + 1
 """)
         
-        functions = detector.ast_analyzer.extract_functions_from_file(str(test_file))
+        functions = detector.extractor.extract_from_file(str(test_file))
         
         # Should extract both the function and the method
         assert len(functions) >= 1
@@ -160,7 +158,7 @@ class TestClass:
             body_content="def compute_sum(products):\n    sum_total = 0\n    for product in products:\n        sum_total += product.get('price', 0)\n    return sum_total"
         )
         
-        similarity = detector._calculate_similarity(func1, func2)
+        similarity = detector.similarity_analyzer.calculate_similarity(func1, func2)
         
         # Should detect some similarity between these similar functions
         assert similarity > 0.0
@@ -178,7 +176,9 @@ class TestClass:
             signature="def func2():", body_content="def func2():\n    return a + b"
         )
         
-        similarity = detector._calculate_similarity_jaccard_tokens(func1, func2)
+        # Test with a specific jaccard tokens analyzer
+        jaccard_analyzer = SimilarityAnalyzer("jaccard_tokens")
+        similarity = jaccard_analyzer.calculate_similarity(func1, func2)
         
         assert isinstance(similarity, float)
         assert 0 <= similarity <= 1
