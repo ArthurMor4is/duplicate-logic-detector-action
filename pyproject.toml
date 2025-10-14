@@ -58,7 +58,7 @@ dev = [
 ]
 
 [project.scripts]
-duplicate-logic-detector = "scripts.duplicate_logic_detector:main"
+duplicate-logic-detector = "scripts.duplicate_detector.main:main"
 run-tests = "run_tests:main"
 
 [tool.hatch.build.targets.wheel]

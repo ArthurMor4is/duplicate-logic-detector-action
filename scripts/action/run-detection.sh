@@ -16,7 +16,7 @@ fi
 
 # Run the duplicate detection
 echo "Analyzing code for duplicates..."
-python duplicate_logic_detector.py \
+python -m duplicate_detector.main \
     --pr-number "$PR_NUMBER" \
     --repository "$REPOSITORY" \
     --base-sha "$BASE_SHA" \
