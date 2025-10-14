@@ -109,21 +109,23 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) specific
 The project uses `pyproject.toml` with organized dependency groups:
 
 ```toml
-# Core dependencies (research/experimentation)
-dependencies = [
+# No core dependencies - keep it clean for action usage
+dependencies = []
+
+[project.optional-dependencies]
+# Runtime dependencies (GitHub Action execution)
+runtime = ["rich==14.1.0"]
+
+# Research dependencies (experiments and analysis)
+research = [
     "GitPython==3.1.45",      # Git operations
     "PyGithub==2.8.1",        # GitHub API
     "scikit-learn==1.7.2",    # ML algorithms
     "nltk==3.9.1",            # Natural language processing
-    "rich==14.1.0",           # Console output
     "numpy>=1.24.0",          # Numerical computing
     "pandas>=2.0.0",          # Data analysis
     "pyyaml>=6.0",            # YAML parsing
 ]
-
-# Runtime dependencies (GitHub Action execution)
-[project.optional-dependencies]
-runtime = ["rich==14.1.0"]
 
 # Development dependencies
 dev = ["black>=23.0.0", "isort>=5.12.0", "flake8>=6.0.0", ...]
@@ -138,18 +140,24 @@ test = ["pytest>=7.0.0", "pytest-mock>=3.10.0", ...]
 uv sync --all-extras
 ```
 
-**Option 2: Minimal Runtime Environment**
+**Option 2: Runtime Only (Action Testing)**
 ```bash
 # Install only runtime dependencies (for testing action behavior)
 uv pip install -e ".[runtime]"
 ```
 
-**Option 3: Specific Groups**
+**Option 3: Research Environment**
+```bash
+# Install research dependencies (for experiments and analysis)
+uv pip install -e ".[runtime,research]"
+```
+
+**Option 4: Specific Groups**
 ```bash
 # Install specific dependency groups
-uv pip install -e ".[dev]"        # Development tools
-uv pip install -e ".[test]"       # Testing framework
-uv pip install -e ".[dev,test]"   # Both dev and test
+uv pip install -e ".[dev]"                    # Development tools
+uv pip install -e ".[test]"                   # Testing framework
+uv pip install -e ".[runtime,dev,test]"       # Action + dev + test
 ```
 
 ### Adding Dependencies

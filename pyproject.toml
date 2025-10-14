@@ -25,21 +25,23 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-dependencies = [
-    "GitPython==3.1.45",
-    "PyGithub==2.8.1",
-    "scikit-learn==1.7.2",
-    "nltk==3.9.1",
-    "rich==14.1.0",
-    "numpy>=1.24.0",
-    "pandas>=2.0.0",
-    "pyyaml>=6.0",
-]
+# No core dependencies - keep it clean for action usage
+dependencies = []
 
 [project.optional-dependencies]
 # Runtime dependencies for GitHub Action (minimal set)
 runtime = [
     "rich==14.1.0",
+]
+# Research and development dependencies (for experiments and analysis)
+research = [
+    "GitPython==3.1.45",
+    "PyGithub==2.8.1",
+    "scikit-learn==1.7.2",
+    "nltk==3.9.1",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "pyyaml>=6.0",
 ]
 test = [
     "pytest>=7.0.0",

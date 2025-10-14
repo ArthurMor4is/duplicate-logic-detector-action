@@ -136,7 +136,7 @@ The action has minimal runtime dependencies for fast execution:
 - **[rich](https://github.com/Textualize/rich) v14.1.0** - Console output and progress bars
 
 ### Development Dependencies
-For development and testing, additional dependencies are available:
+For development, testing, and research, additional dependencies are available:
 - **Testing**: pytest, pytest-mock, pytest-cov, pytest-xdist
 - **Code Quality**: black, isort, flake8, mypy, pre-commit
 - **Research**: GitPython, PyGithub, scikit-learn, nltk, numpy, pandas, pyyaml
@@ -145,9 +145,15 @@ For development and testing, additional dependencies are available:
 The action uses modern Python packaging with `pyproject.toml` and [uv](https://github.com/astral-sh/uv) for fast dependency management:
 
 ```toml
+# Clean core dependencies
+dependencies = []
+
 # Runtime dependencies (action execution)
 [project.optional-dependencies]
 runtime = ["rich==14.1.0"]
+
+# Research dependencies (experiments)
+research = ["GitPython", "PyGithub", "scikit-learn", ...]
 
 # Development dependencies
 dev = ["black>=23.0.0", "isort>=5.12.0", ...]
