@@ -53,6 +53,7 @@ jobs:
 | `head-ref` | Head reference for comparison | ❌ | `${{ github.head_ref }}` |
 | `post-comment` | Post findings as PR comment | ❌ | `true` |
 | `fail-on-duplicates` | Fail if high-confidence duplicates found | ❌ | `false` |
+| `similarity-method` | Similarity method to use (`jaccard_tokens`, `sequence_matcher`, `levenshtein_norm`) | ❌ | `jaccard_tokens` |
 
 ## 📊 Outputs
 
@@ -90,19 +91,45 @@ jobs:
     post-comment: false
 ```
 
+### Custom Similarity Method
+```yaml
+- name: Detect Duplicate Logic (High Precision)
+  uses: ArthurMor4is/duplicate-logic-detector-action@v1
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    similarity-method: levenshtein_norm  # More thorough analysis
+    fail-on-duplicates: true
+```
+
 ## 🔍 Detection Strategies
 
-The action uses token-based Jaccard similarity analysis to detect duplicate logic patterns:
+The action uses configurable similarity analysis to detect duplicate logic patterns:
 
 ### 1. AST Analysis
 - Parses Python files to extract function definitions
 - Analyzes function signatures and structure
 - Identifies code patterns and complexity
 
-### 2. Token-Based Similarity
-- Converts functions to token representations
-- Uses Jaccard similarity coefficient for comparison
-- Focuses on logical structure over exact text matching
+### 2. Similarity Methods
+Choose from three different similarity algorithms:
+
+#### `jaccard_tokens` (Default)
+- **Best for**: General purpose, fast analysis
+- **Method**: Token-based Jaccard similarity coefficient
+- **Strengths**: Fast, good balance of precision/recall
+- **Use when**: You want reliable results with good performance
+
+#### `sequence_matcher`
+- **Best for**: Balanced approach between speed and accuracy
+- **Method**: Python's difflib.SequenceMatcher
+- **Strengths**: Good at detecting structural similarities
+- **Use when**: You need more nuanced similarity detection
+
+#### `levenshtein_norm`
+- **Best for**: High precision, strict duplicate detection
+- **Method**: Normalized Levenshtein distance
+- **Strengths**: Most thorough analysis, best precision
+- **Use when**: You want to catch even subtle duplicates
 
 ### 3. Smart Filtering
 - Excludes very small functions (< 5 lines)

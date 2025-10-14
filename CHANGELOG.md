@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Configurable Similarity Methods**: Added `similarity-method` input parameter with three options:
+  - `jaccard_tokens` (default): Fast, token-based Jaccard similarity
+  - `sequence_matcher`: Balanced approach using Python's difflib.SequenceMatcher
+  - `levenshtein_norm`: High precision using normalized Levenshtein distance
+- New examples demonstrating different similarity methods
+- Enhanced documentation with method recommendations and use cases
+- **Modular Architecture**: Refactored codebase into professional modular structure:
+  - `duplicate_detector.models`: Data models (CodeFunction, DuplicateMatch)
+  - `duplicate_detector.similarity`: Similarity analysis algorithms
+  - `duplicate_detector.extractor`: Python function extraction
+  - `duplicate_detector.reporters`: Multi-format report generation
+  - `duplicate_detector.detector`: Main orchestration class
+- Added similarity threshold parameter for filtering results
+- Enhanced error handling and validation throughout
+
+### Fixed
+- **Dependency Installation**: Fixed action failing when target repository doesn't have `pyproject.toml` or `setup.py`
+- Action now installs dependencies from its own directory instead of target repository
+- Improved code organization and maintainability
+
 ## [1.0.2] - 2025-09-30
 
 ### Fixed

@@ -25,3 +25,4 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           post-comment: true
           fail-on-duplicates: false
+          similarity-method: jaccard_tokens  # Options: jaccard_tokens, sequence_matcher, levenshtein_norm

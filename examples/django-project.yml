@@ -19,3 +19,4 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           fail-on-duplicates: true
+          similarity-method: levenshtein_norm  # More strict for production code

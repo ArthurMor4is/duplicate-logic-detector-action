@@ -44,6 +44,11 @@ inputs:
     required: false
     default: 'false'
   
+  similarity-method:
+    description: 'Similarity method to use for duplicate detection (jaccard_tokens, sequence_matcher, levenshtein_norm)'
+    required: false
+    default: 'jaccard_tokens'
+  
 
 outputs:
   duplicates-found:
@@ -95,6 +100,7 @@ runs:
         HEAD_SHA: ${{ steps.changed-files.outputs.head_sha }}
         PR_NUMBER: ${{ inputs.pr-number }}
         REPOSITORY: ${{ inputs.repository }}
+        SIMILARITY_METHOD: ${{ inputs.similarity-method }}
       run: ${{ github.action_path }}/scripts/action/run-detection.sh
     
     - name: Upload analysis results
