@@ -37,6 +37,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Runtime dependencies for GitHub Action (minimal set)
+runtime = [
+    "rich==14.1.0",
+]
 test = [
     "pytest>=7.0.0",
     "pytest-mock>=3.10.0",
