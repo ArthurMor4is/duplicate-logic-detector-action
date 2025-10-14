@@ -12,6 +12,7 @@ from .models import CodeFunction, DuplicateMatch
 from .similarity import SimilarityAnalyzer
 from .extractor import PythonFunctionExtractor
 from .reporters import MultiFormatReporter
+from .thresholds import ThresholdConfig
 from .main import main
 
 __all__ = [
@@ -21,5 +22,6 @@ __all__ = [
     "SimilarityAnalyzer",
     "PythonFunctionExtractor", 
     "MultiFormatReporter",
+    "ThresholdConfig",
     "main",
 ]

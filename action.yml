@@ -49,6 +49,16 @@ inputs:
     required: false
     default: 'jaccard_tokens'
   
+  global-threshold:
+    description: 'Global similarity threshold (0.0-1.0). Functions with similarity above this are considered duplicates'
+    required: false
+    default: '0.7'
+  
+  folder-thresholds:
+    description: 'Per-folder thresholds as JSON (e.g., {"src/shared": 0.1, "src/tests": 0.9}). Overrides global threshold for specific folders'
+    required: false
+    default: '{}'
+  
 
 outputs:
   duplicates-found:
@@ -101,6 +111,8 @@ runs:
         PR_NUMBER: ${{ inputs.pr-number }}
         REPOSITORY: ${{ inputs.repository }}
         SIMILARITY_METHOD: ${{ inputs.similarity-method }}
+        GLOBAL_THRESHOLD: ${{ inputs.global-threshold }}
+        FOLDER_THRESHOLDS: ${{ inputs.folder-thresholds }}
       run: ${{ github.action_path }}/scripts/action/run-detection.sh
     
     - name: Upload analysis results

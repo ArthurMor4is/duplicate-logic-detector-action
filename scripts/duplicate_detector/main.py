@@ -16,6 +16,7 @@ from rich.console import Console
 
 from .detector import DuplicateLogicDetector
 from .reporters import MultiFormatReporter
+from .thresholds import create_threshold_config_from_env
 
 
 def main():
@@ -42,10 +43,13 @@ def main():
         help="Similarity method to use for duplicate detection (default: jaccard_tokens)"
     )
     parser.add_argument(
-        "--similarity-threshold",
+        "--global-threshold",
         type=float,
-        default=0.0,
-        help="Minimum similarity score to include in results (0.0-1.0)"
+        help="Global similarity threshold (0.0-1.0). Overrides environment variable."
+    )
+    parser.add_argument(
+        "--folder-thresholds",
+        help="Per-folder thresholds as JSON string. Overrides environment variable."
     )
 
     args = parser.parse_args()
@@ -66,10 +70,24 @@ def main():
             console.print("[green]No Python files changed[/green]")
             return 0
 
-        # Initialize detector with the specified similarity method
+        # Create threshold configuration
+        if args.global_threshold is not None or args.folder_thresholds is not None:
+            # Use command line arguments
+            from .thresholds import ThresholdConfig
+            threshold_config = ThresholdConfig.from_strings(
+                str(args.global_threshold) if args.global_threshold is not None else None,
+                args.folder_thresholds,
+                console
+            )
+        else:
+            # Use environment variables
+            threshold_config = create_threshold_config_from_env(console)
+
+        # Initialize detector with the specified similarity method and thresholds
         detector = DuplicateLogicDetector(
             repository_path=args.repository_path,
             similarity_method=args.similarity_method,
+            threshold_config=threshold_config,
             console=console
         )
 
@@ -81,8 +99,7 @@ def main():
         matches = detector.analyze_pr_changes(
             changed_files, 
             args.base_sha, 
-            args.head_sha,
-            similarity_threshold=args.similarity_threshold
+            args.head_sha
         )
 
         # Generate reports

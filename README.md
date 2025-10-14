@@ -54,6 +54,8 @@ jobs:
 | `post-comment` | Post findings as PR comment | ❌ | `true` |
 | `fail-on-duplicates` | Fail if high-confidence duplicates found | ❌ | `false` |
 | `similarity-method` | Similarity method to use (`jaccard_tokens`, `sequence_matcher`, `levenshtein_norm`) | ❌ | `jaccard_tokens` |
+| `global-threshold` | Global similarity threshold (0.0-1.0) for all methods | ❌ | `0.7` |
+| `folder-thresholds` | Per-folder thresholds as JSON (e.g., `{"src/shared": 0.1, "src/tests": 0.9}`) | ❌ | `{}` |
 
 ## 📊 Outputs
 
@@ -101,6 +103,26 @@ jobs:
     fail-on-duplicates: true
 ```
 
+### Custom Threshold Configuration
+```yaml
+- name: Detect Duplicate Logic (Custom Thresholds)
+  uses: ArthurMor4is/duplicate-logic-detector-action@v1
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    global-threshold: 0.8  # Higher threshold for stricter detection
+    folder-thresholds: '{"src/shared": 0.1, "src/tests": 0.9}'
+```
+
+### Per-Folder Threshold Configuration
+```yaml
+- name: Detect Duplicate Logic (Folder-Specific Thresholds)
+  uses: ArthurMor4is/duplicate-logic-detector-action@v1
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    similarity-method: jaccard_tokens
+    folder-thresholds: '{"src/shared": 0.1, "src/core": 0.8, "tests": 0.9}'
+```
+
 ## 🔍 Detection Strategies
 
 The action uses configurable similarity analysis to detect duplicate logic patterns:
@@ -135,6 +157,39 @@ Choose from three different similarity algorithms:
 - Excludes very small functions (< 5 lines)
 - Filters out test files and common patterns
 - Prioritizes business logic and complex functions
+
+### 4. Configurable Thresholds
+Control when functions are considered duplicates with flexible threshold settings:
+
+#### Global Threshold
+- **Default**: `0.7` (70% similarity)
+- **Usage**: Applies to all files when no folder-specific threshold is set
+- **Range**: `0.0` to `1.0` (0% to 100% similarity)
+
+#### Per-Folder Thresholds
+- **Format**: JSON object with folder paths as keys
+- **Example**: `{"src/shared": 0.1, "src/tests": 0.9}`
+- **Priority**: Folder-specific thresholds override global threshold
+- **Matching**: Uses most specific (longest) matching folder path
+- **Fallback**: If no folder threshold matches, uses global threshold
+
+#### Threshold Examples
+```yaml
+# Strict detection globally
+global-threshold: 0.85
+
+# Lenient detection globally
+global-threshold: 0.5
+
+# Mixed approach (lenient for shared code, strict for tests)
+folder-thresholds: '{"src/shared": 0.1, "tests": 0.9, "src/core": 0.8}'
+```
+
+#### Real-World Use Cases
+- **Shared Libraries**: Low threshold (0.1-0.3) to catch even minor duplications
+- **Test Files**: High threshold (0.8-0.9) to avoid false positives on similar test patterns
+- **Core Business Logic**: Medium-high threshold (0.6-0.8) for important code quality
+- **Utilities**: Medium threshold (0.5-0.7) for general utility functions
 
 ## 📈 Example Output
 

@@ -1,10 +1,12 @@
 import pytest
 import tempfile
+import os
 from pathlib import Path
 
 from scripts.duplicate_detector.models import CodeFunction, DuplicateMatch
 from scripts.duplicate_detector.detector import DuplicateLogicDetector  
 from scripts.duplicate_detector.similarity import SimilarityAnalyzer
+from scripts.duplicate_detector.thresholds import ThresholdConfig, create_threshold_config_from_env
 
 
 class TestCodeFunction:
@@ -243,6 +245,162 @@ def compute_discount_amount(original_price, discount_percent):
             assert isinstance(match, DuplicateMatch)
             assert match.similarity_score >= 0.0
             assert match.similarity_score <= 1.0
+    
+    def test_detector_with_custom_thresholds(self, sample_repo):
+        """Test detector with custom threshold configuration."""
+        folder_thresholds = {"src/shared": 0.1, "src/tests": 0.9}
+        threshold_config = ThresholdConfig(global_threshold=0.75, folder_thresholds=folder_thresholds)
+        
+        detector = DuplicateLogicDetector(
+            repository_path=str(sample_repo),
+            threshold_config=threshold_config
+        )
+        
+        # Verify threshold configuration is set
+        assert detector.threshold_config.global_threshold == 0.75
+        assert detector.threshold_config.folder_thresholds == folder_thresholds
+        
+        # Test configuration info includes threshold details
+        config_info = detector.get_configuration_info()
+        assert "global_threshold" in config_info
+        assert "folder_thresholds" in config_info
+
+
+class TestThresholdConfig:
+    """Test the ThresholdConfig class."""
+    
+    def test_default_threshold_config(self):
+        """Test creating a ThresholdConfig with default values."""
+        config = ThresholdConfig()
+        
+        assert config.global_threshold == 0.7
+        assert config.folder_thresholds == {}
+    
+    def test_custom_global_threshold(self):
+        """Test creating a ThresholdConfig with custom global threshold."""
+        config = ThresholdConfig(global_threshold=0.8)
+        
+        assert config.global_threshold == 0.8
+        assert config.folder_thresholds == {}
+    
+    def test_custom_folder_thresholds(self):
+        """Test creating a ThresholdConfig with custom folder thresholds."""
+        folder_thresholds = {"src/shared": 0.1, "src/tests": 0.9}
+        config = ThresholdConfig(folder_thresholds=folder_thresholds)
+        
+        assert config.global_threshold == 0.7
+        assert config.folder_thresholds == folder_thresholds
+    
+    def test_should_report_match_global_threshold(self):
+        """Test should_report_match with global threshold."""
+        config = ThresholdConfig(global_threshold=0.8)
+        
+        # Should report matches above threshold
+        assert config.should_report_match(0.9, "src/main.py") == True
+        assert config.should_report_match(0.8, "src/main.py") == True
+        
+        # Should not report matches below threshold
+        assert config.should_report_match(0.7, "src/main.py") == False
+        assert config.should_report_match(0.5, "src/main.py") == False
+    
+    def test_should_report_match_folder_threshold(self):
+        """Test should_report_match with folder-specific threshold."""
+        folder_thresholds = {"src/shared": 0.1, "src/tests": 0.9}
+        config = ThresholdConfig(folder_thresholds=folder_thresholds)
+        
+        # Should use folder-specific threshold when available
+        assert config.should_report_match(0.5, "src/shared/utils.py") == True  # 0.5 > 0.1
+        assert config.should_report_match(0.05, "src/shared/utils.py") == False  # 0.05 < 0.1
+        
+        assert config.should_report_match(0.95, "src/tests/test_main.py") == True  # 0.95 > 0.9
+        assert config.should_report_match(0.8, "src/tests/test_main.py") == False  # 0.8 < 0.9
+        
+        # Should fall back to global threshold for unknown folders
+        assert config.should_report_match(0.8, "src/main.py") == True  # 0.8 > 0.7 (global)
+        assert config.should_report_match(0.6, "src/main.py") == False  # 0.6 < 0.7 (global)
+    
+    def test_get_configuration_summary(self):
+        """Test getting configuration summary."""
+        folder_thresholds = {"src/shared": 0.1, "src/tests": 0.9}
+        config = ThresholdConfig(global_threshold=0.75, folder_thresholds=folder_thresholds)
+        
+        summary = config.get_configuration_summary()
+        
+        assert "global_threshold" in summary
+        assert "folder_thresholds" in summary
+        assert summary["global_threshold"] == 0.75
+        assert summary["folder_thresholds"] == folder_thresholds
+
+
+class TestCreateThresholdConfigFromEnv:
+    """Test the create_threshold_config_from_env function."""
+    
+    def test_default_environment(self):
+        """Test with no environment variables set."""
+        config = create_threshold_config_from_env()
+        
+        assert config.global_threshold == 0.7
+        assert config.folder_thresholds == {}
+    
+    def test_global_threshold_from_env(self):
+        """Test with GLOBAL_THRESHOLD environment variable."""
+        os.environ["GLOBAL_THRESHOLD"] = "0.8"
+        
+        try:
+            config = create_threshold_config_from_env()
+            assert config.global_threshold == 0.8
+            assert config.folder_thresholds == {}
+        finally:
+            del os.environ["GLOBAL_THRESHOLD"]
+    
+    def test_folder_thresholds_from_env(self):
+        """Test with FOLDER_THRESHOLDS environment variable."""
+        os.environ["FOLDER_THRESHOLDS"] = '{"src/shared": 0.1, "src/tests": 0.9}'
+        
+        try:
+            config = create_threshold_config_from_env()
+            assert config.global_threshold == 0.7
+            assert config.folder_thresholds == {"src/shared": 0.1, "src/tests": 0.9}
+        finally:
+            del os.environ["FOLDER_THRESHOLDS"]
+    
+    def test_global_threshold_override(self):
+        """Test with global_threshold_arg parameter."""
+        # This test is not applicable since the function only reads from environment
+        # We'll test the ThresholdConfig.from_strings method instead
+        config = ThresholdConfig.from_strings(global_threshold_str="0.9")
+        
+        assert config.global_threshold == 0.9
+        assert config.folder_thresholds == {}
+    
+    def test_folder_thresholds_override(self):
+        """Test with folder_thresholds_arg parameter."""
+        # This test is not applicable since the function only reads from environment
+        # We'll test the ThresholdConfig.from_strings method instead
+        config = ThresholdConfig.from_strings(folder_thresholds_json='{"src/shared": 0.1, "src/core": 0.85}')
+        
+        assert config.global_threshold == 0.7
+        assert config.folder_thresholds == {"src/shared": 0.1, "src/core": 0.85}
+    
+    def test_invalid_global_threshold(self):
+        """Test with invalid global threshold."""
+        os.environ["GLOBAL_THRESHOLD"] = "invalid"
+        
+        try:
+            with pytest.raises(ValueError, match="Invalid global threshold"):
+                create_threshold_config_from_env()
+        finally:
+            del os.environ["GLOBAL_THRESHOLD"]
+    
+    def test_invalid_folder_thresholds(self):
+        """Test with invalid folder thresholds JSON."""
+        os.environ["FOLDER_THRESHOLDS"] = "invalid json"
+        
+        try:
+            with pytest.raises(ValueError, match="Invalid folder thresholds JSON"):
+                create_threshold_config_from_env()
+        finally:
+            del os.environ["FOLDER_THRESHOLDS"]
 
 
 if __name__ == "__main__":
