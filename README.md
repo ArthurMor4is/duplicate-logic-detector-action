@@ -17,6 +17,7 @@ Prevent code duplication, improve code quality, and maintain cleaner codebases w
 - ⚙️ **Highly Configurable**: Adjustable similarity thresholds and file patterns
 - 📊 **Comprehensive Reports**: JSON and Markdown reports with detailed analysis
 - 🚀 **Fast & Efficient**: Uses uv package manager for lightning-fast dependency installation
+- 💬 **Feedback Collection**: Automatically collects user reactions to improve detection quality
 
 ## 🚀 Quick Start
 
@@ -309,10 +310,37 @@ build-dataset --clones-folder="clones_output" --dataset-name="test_dataset.json"
 
 See the [Dataset Generation Guide](scripts/dataset_generation/README.md) for detailed instructions.
 
+## 📡 Feedback Collector
+
+Servidor simples para coletar reações em tempo real dos comentários da action:
+
+- **Coleta em Tempo Real**: Monitora reações via webhook do GitHub
+- **API Simples**: Endpoints para visualizar dados e estatísticas
+- **Fácil Deploy**: Servidor Node.js standalone ou serverless
+
+### Quick Setup
+
+```bash
+# 1. Instalar dependências
+npm install
+
+# 2. Configurar variáveis
+export WEBHOOK_SECRET="seu-secret-aqui"
+export PORT=3000
+
+# 3. Executar servidor
+npm start
+```
+
+Configure o webhook no GitHub apontando para `/webhook` e monitore as reações em tempo real!
+
+Veja o [Guia do Feedback Collector](FEEDBACK_COLLECTOR.md) para instruções completas.
+
 ## 📚 Documentation
 
 - [Usage Guide](USAGE.md) - Detailed usage instructions
 - [Testing Guide](TESTING.md) - How to test the action
+- [Feedback Collector Guide](FEEDBACK_COLLECTOR.md) - Real-time reaction collection
 - [Dataset Generation Guide](scripts/dataset_generation/README.md) - Generate test datasets
 - [Examples](examples/) - Complete workflow examples
 
