@@ -1,0 +1,10 @@
+# Configuração do Feedback Collector
+
+# Porta do servidor (padrão: 3000)
+PORT=3000
+
+# Secret do webhook do GitHub (configure o mesmo no GitHub)
+WEBHOOK_SECRET=seu-webhook-secret-aqui
+
+# Arquivo onde os dados serão salvos (padrão: feedback-reactions.json)
+DATA_FILE=feedback-reactions.json

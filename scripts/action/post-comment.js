@@ -19,13 +19,26 @@ module.exports = async ({github, context, core}) => {
       return;
     }
     
+    // Add feedback collection footer to the report
+    const feedbackFooter = `
+
+---
+
+*💡 **Help us improve!** React with 👍 if this analysis was helpful, or 👎 if it needs improvement.*
+<!-- duplicate-logic-detector-comment-${Date.now()} -->`;
+
+    const reportWithFeedback = report + feedbackFooter;
+
     // Post the comment
-    await github.rest.issues.createComment({
+    const comment = await github.rest.issues.createComment({
       issue_number: context.payload.pull_request?.number || process.env.PR_NUMBER,
       owner: context.repo.owner,
       repo: context.repo.repo,
-      body: report
+      body: reportWithFeedback
     });
+
+    // Log comment ID for feedback tracking
+    core.info(`📝 Posted comment with ID: ${comment.data.id}`);
     
     core.info('✅ Posted duplicate logic detection results to PR');
     
