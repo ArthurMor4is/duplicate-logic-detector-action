@@ -1,0 +1,121 @@
+# Dataset Generation Configuration Template
+# This file shows all available configuration options for dataset generation
+
+# Clone Generation Configuration
+clone_generation:
+  # Source code paths (list of directories to scan for Python files)
+  source_folders:
+    - "./src"
+    - "./lib"
+    - "./app/core"
+  
+  # Output configuration
+  output_folder: "./generated_clones"
+  
+  # Generation parameters
+  n_clones: 3                    # Number of clones per function
+  n_modules: null                # Number of modules to select (null = all)
+  seed: 42                       # Random seed for reproducibility
+  
+  # OpenAI Configuration
+  openai:
+    model: "gpt-4-turbo"         # Model to use (gpt-4-turbo, gpt-3.5-turbo)
+    api_key: null                # API key (use environment variable OPENAI_API_KEY)
+    temperature: 0.8             # Temperature for generation (0.0-1.0)
+    max_retries: 3               # Max retries for failed API calls
+  
+  # Quality control
+  quality:
+    validate_syntax: true        # Validate generated code syntax
+    remove_duplicates: true      # Remove duplicate functions
+    max_function_length: 1000    # Skip functions longer than this (lines)
+    min_function_length: 3       # Skip functions shorter than this (lines)
+
+# Dataset Building Configuration  
+dataset_building:
+  # Input/Output
+  clones_folder: "./generated_clones"
+  dataset_name: "function_clones_dataset.json"
+  
+  # Dataset balance
+  clone_ratio: 0.5               # Ratio of true clones (0.0-1.0)
+  
+  # Output format
+  format: "json"                 # json, parquet, csv
+  
+  # Sampling
+  seed: 42                       # Random seed for reproducible sampling
+  max_pairs: null                # Maximum number of pairs (null = no limit)
+  
+  # Quality filters
+  filters:
+    min_function_length: 10      # Minimum function length (characters)
+    max_function_length: 5000    # Maximum function length (characters)
+    exclude_trivial: true        # Exclude trivial functions (single return, pass, etc.)
+
+# Multiple Dataset Generation
+# Generate multiple datasets with different configurations
+multiple_datasets:
+  enabled: false
+  
+  datasets:
+    - name: "balanced"
+      clone_ratio: 0.5
+      description: "Balanced dataset (50% clones)"
+      
+    - name: "unbalanced_low"  
+      clone_ratio: 0.3
+      description: "Unbalanced dataset (30% clones)"
+      
+    - name: "unbalanced_high"
+      clone_ratio: 0.7
+      description: "Clone-heavy dataset (70% clones)"
+      
+    - name: "minimal_clones"
+      clone_ratio: 0.1
+      description: "Minimal clones (10% clones)"
+
+# Validation Configuration
+validation:
+  enabled: true
+  
+  # Automatic validation checks
+  checks:
+    syntax_validation: true      # Validate Python syntax
+    duplicate_detection: true    # Check for duplicate pairs
+    balance_verification: true   # Verify clone ratio
+    format_validation: true      # Validate output format
+  
+  # Manual review settings
+  manual_review:
+    enabled: false
+    sample_size: 10              # Number of pairs to sample for manual review
+    output_file: "manual_review_sample.json"
+
+# Logging Configuration
+logging:
+  level: "INFO"                  # DEBUG, INFO, WARNING, ERROR
+  file: null                     # Log file path (null = console only)
+  verbose: true                  # Enable verbose output
+  
+  # Progress tracking
+  progress:
+    show_progress_bar: true      # Show progress bars
+    update_interval: 10          # Progress update interval (seconds)
+
+# Performance Configuration
+performance:
+  # Parallel processing
+  parallel:
+    enabled: true
+    max_workers: 4               # Maximum parallel workers
+  
+  # Memory management
+  memory:
+    chunk_size: 100              # Process functions in chunks
+    max_memory_mb: 1000          # Maximum memory usage (MB)
+  
+  # API rate limiting
+  rate_limiting:
+    requests_per_minute: 60      # OpenAI API rate limit
+    retry_delay: 5               # Delay between retries (seconds)
