@@ -1,0 +1,13 @@
+# Simple requirements for evaluation
+# Install with: pip install -r eval_requirements.txt
+
+# Core dependencies (same as action)
+GitPython==3.1.45
+PyGithub==2.8.1
+scikit-learn==1.7.2
+nltk==3.9.1
+rich==14.1.0
+numpy>=1.24.0
+
+# For monitoring
+psutil>=5.9.0
