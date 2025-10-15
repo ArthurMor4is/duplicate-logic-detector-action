@@ -13,6 +13,7 @@ import pandas as pd
 def extract_function_name_from_source(function_source: str) -> Optional[str]:
     """
     Extract the function name from function source code.
+    Handles both top-level functions and class methods.
     
     Args:
         function_source (str): The source code of the function.
@@ -22,8 +23,9 @@ def extract_function_name_from_source(function_source: str) -> Optional[str]:
     """
     try:
         tree = ast.parse(function_source)
-        for node in tree.body:
-            if isinstance(node, ast.FunctionDef):
+        # Use ast.walk to find function nodes (supports both top-level and nested functions)
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 return node.name
     except Exception:
         pass
@@ -51,7 +53,7 @@ def build_function_clone_dataset(
                            0.5 means 50% true clones, 50% false clones.
     """
 
-    # Step 1: Collect functions from all modules
+    # Step 1: Collect functions from all modules (including class methods)
     module_functions: dict[str, list[str]] = {}
     for fname in os.listdir(folder_path):
         if fname.endswith(".py"):
@@ -61,8 +63,9 @@ def build_function_clone_dataset(
                     src = fin.read()
                     tree = ast.parse(src)
                     functions = []
-                    for node in tree.body:
-                        if isinstance(node, ast.FunctionDef):
+                    # Use ast.walk to find all functions, including class methods
+                    for node in ast.walk(tree):
+                        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                             function_src = ast.get_source_segment(src, node)
                             if function_src is not None:
                                 functions.append(function_src)
