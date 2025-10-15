@@ -43,6 +43,12 @@ research = [
     "pandas>=2.0.0",
     "pyyaml>=6.0",
 ]
+# Dataset generation dependencies (for creating clone datasets)
+dataset = [
+    "openai>=1.0.0",          # OpenAI API for generating function clones
+    "pandas>=2.0.0",          # Data manipulation for dataset building
+    "numpy>=1.24.0",          # Numerical operations
+]
 test = [
     "pytest>=7.0.0",
     "pytest-mock>=3.10.0",
@@ -60,6 +66,9 @@ dev = [
 [project.scripts]
 duplicate-logic-detector = "scripts.duplicate_detector.main:main"
 run-tests = "run_tests:main"
+# Dataset generation CLI tools
+generate-clones = "scripts.dataset_generation.generate_clones:main"
+build-dataset = "scripts.dataset_generation.build_dataset:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["scripts"]

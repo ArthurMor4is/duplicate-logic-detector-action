@@ -252,6 +252,9 @@ dependencies = []
 [project.optional-dependencies]
 runtime = ["rich==14.1.0"]
 
+# Dataset generation dependencies
+dataset = ["openai>=1.0.0", "pandas>=2.0.0", "numpy>=1.24.0"]
+
 # Research dependencies (experiments)
 research = ["GitPython", "PyGithub", "scikit-learn", ...]
 
@@ -283,10 +286,33 @@ make test-sample
 
 **Note**: The `config/default-config.yml` file is used for development and testing purposes only. The GitHub Action uses built-in configuration optimized for CI/CD workflows.
 
+## 🧪 Dataset Generation
+
+This repository includes tools to generate datasets for testing and tuning duplicate detection algorithms:
+
+```bash
+# Install dataset generation dependencies
+uv pip install -e ".[dataset]"
+
+# Generate function clones using LLM
+generate-clones --source-code "./src" --dest-folder="clones_output" --n-clones=3
+
+# Build balanced datasets
+build-dataset --clones-folder="clones_output" --dataset-name="test_dataset.json" --clone-ratio=0.5
+```
+
+**Use Cases:**
+- 🔬 **Algorithm Testing**: Test different similarity methods on your codebase
+- 🎯 **Threshold Tuning**: Find optimal detection thresholds
+- 📊 **Performance Evaluation**: Compare detection strategies with ground truth data
+
+See the [Dataset Generation Guide](scripts/dataset_generation/README.md) for detailed instructions.
+
 ## 📚 Documentation
 
 - [Usage Guide](USAGE.md) - Detailed usage instructions
 - [Testing Guide](TESTING.md) - How to test the action
+- [Dataset Generation Guide](scripts/dataset_generation/README.md) - Generate test datasets
 - [Examples](examples/) - Complete workflow examples
 
 ## 🤝 Contributing
