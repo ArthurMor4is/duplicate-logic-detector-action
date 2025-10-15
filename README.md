@@ -12,6 +12,7 @@ Prevent code duplication, improve code quality, and maintain cleaner codebases w
 
 - 🧠 **Multi-Strategy Detection**: AST analysis, semantic similarity, and function signature matching
 - 🎯 **Smart Pattern Recognition**: Detects business logic patterns and common code structures
+- 🏗️ **Full Class Support**: Detects duplicates in both top-level functions and class methods
 - 💬 **Actionable PR Comments**: Provides suggestions and refactoring recommendations
 - ⚙️ **Highly Configurable**: Adjustable similarity thresholds and file patterns
 - 📊 **Comprehensive Reports**: JSON and Markdown reports with detailed analysis

@@ -12,15 +12,21 @@ OPNEAIAPIKEY = ""
 
 def extract_function_names_from_str(source: str) -> List[str]:
     """
-    Extracts a list of top-level function names from a Python source string.
+    Extracts a list of function names from a Python source string.
+    Includes both top-level functions and class methods.
     """
     tree = ast.parse(source)
-    return [node.name for node in tree.body if isinstance(node, ast.FunctionDef)]
+    function_names = []
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            function_names.append(node.name)
+    return function_names
 
 
 def extract_function_names(module_path: str) -> List[str]:
     """
-    Extracts a list of top-level function names from a Python module file.
+    Extracts a list of function names from a Python module file.
+    Includes both top-level functions and class methods.
     """
     with open(module_path, "r", encoding="utf-8") as f:
         source = f.read()
@@ -29,26 +35,24 @@ def extract_function_names(module_path: str) -> List[str]:
 
 def extract_function_source_from_str(source: str, function_name: str) -> Optional[str]:
     """
-    Extract the source code for a top-level function with the given name from a source string.
+    Extract the source code for a function with the given name from a source string.
     Returns the function source code as a string, or None if not found.
+    Includes both top-level functions and class methods.
     """
     tree = ast.parse(source)
-    for node in tree.body:
-        if isinstance(node, ast.FunctionDef) and node.name == function_name:
-            lines = source.splitlines()
-            fn_start = node.lineno - 1
-            fn_end = fn_start
-            for i in range(fn_start + 1, len(lines)):
-                if lines[i].lstrip().startswith("def ") or lines[i].lstrip().startswith("class "):
-                    break
-                fn_end = i
-            return "\n".join(lines[fn_start : fn_end + 1])
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == function_name:
+            # Use ast.get_source_segment for accurate extraction
+            function_source = ast.get_source_segment(source, node)
+            if function_source:
+                return function_source
     return None
 
 
 def extract_function_source(module_path: str, function_name: str) -> Optional[str]:
     """
-    Extract source of a top-level function from a module by its name.
+    Extract source of a function from a module by its name.
+    Includes both top-level functions and class methods.
     """
     with open(module_path, "r", encoding="utf-8") as f:
         source = f.read()
@@ -59,7 +63,7 @@ def select_random_modules_with_functions(
     source_folders: List[str], n_modules: int, seed: Optional[int] = None
 ) -> List[str]:
     """
-    Recursively selects n_modules Python files that contain top-level functions randomly 
+    Recursively selects n_modules Python files that contain functions randomly 
     from the given folders (including all subfolders), using the specified seed. 
     Returns a list of module file paths.
     
@@ -69,9 +73,9 @@ def select_random_modules_with_functions(
         seed: Random seed for reproducible results
         
     Returns:
-        List of selected Python file paths that contain top-level functions
+        List of selected Python file paths that contain functions (including class methods)
     """
-    # First, collect all files that have top-level functions
+    # First, collect all files that have functions
     files_with_functions: List[str] = []
     for source_folder in source_folders:
         for root, _, files in os.walk(source_folder):
@@ -79,7 +83,7 @@ def select_random_modules_with_functions(
                 if file.endswith(".py"):
                     file_path = os.path.join(root, file)
                     if os.path.isfile(file_path):
-                        # Check if this file has top-level functions
+                        # Check if this file has functions (including class methods)
                         function_names = extract_function_names(file_path)
                         if function_names:
                             files_with_functions.append(file_path)
@@ -92,7 +96,8 @@ def select_random_modules_with_functions(
 
 def choose_random_method_from_module(module_path: str, seed: Optional[int] = None) -> Optional[str]:
     """
-    Chooses a random top-level function name from a Python module file, using the given seed.
+    Chooses a random function name from a Python module file, using the given seed.
+    Includes both top-level functions and class methods.
     Returns the function name or None if none found.
     """
     fnames = extract_function_names(module_path)
@@ -434,7 +439,7 @@ After generating clones, manually review the generated files in the output folde
                         if file.endswith(".py"):
                             file_path = os.path.join(root, file)
                             if os.path.isfile(file_path):
-                                # Check if this file has top-level functions
+                                # Check if this file has functions (including class methods)
                                 function_names = extract_function_names(file_path)
                                 if function_names:
                                     selected_modules.append(file_path)

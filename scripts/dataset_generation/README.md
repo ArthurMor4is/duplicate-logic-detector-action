@@ -189,6 +189,36 @@ generate-clones --source-code "./src" --dest-folder="eval_clones" --seed=12345
 build-dataset --clones-folder="eval_clones" --dataset-name="evaluation.json" --seed=12345
 ```
 
+## ⚠️ Known Limitations
+
+### Duplicate Function/Method Names
+
+**Important**: If your source code contains multiple functions or methods with the **same name** in a single module (e.g., method overloading across different classes), only **one** of them will be selected for clone generation.
+
+**Example of the limitation**:
+```python
+# module.py
+class UserValidator:
+    def validate(self, user):  # Only this validate OR the one below will be selected
+        return user.is_active
+
+class AdminValidator:
+    def validate(self, admin):  # This might be skipped if the above is chosen
+        return admin.has_permissions
+```
+
+**Why this happens**: 
+- The clone generation randomly selects one function/method name from each module
+- When extracting the source code, if multiple functions share the same name, only the first match found by `ast.walk()` will be used
+- This is because the selection is based on function names, not full qualified names (e.g., `ClassName.method_name`)
+
+**Workaround**:
+1. Ensure unique function/method names across your source code when generating datasets
+2. Manually select specific modules with unique names
+3. Or accept that some methods may be skipped in the random selection
+
+**Future Enhancement**: This could be improved by using fully qualified names (class.method) instead of just method names for selection.
+
 ## 🔍 Quality Control
 
 ### Manual Review Process
