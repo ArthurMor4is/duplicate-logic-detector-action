@@ -264,6 +264,53 @@ def compute_discount_amount(original_price, discount_percent):
         config_info = detector.get_configuration_info()
         assert "global_threshold" in config_info
         assert "folder_thresholds" in config_info
+    
+    def test_folder_threshold_with_multiple_paths(self):
+        """Test that detector considers thresholds for both file paths correctly."""
+        # Create mock functions to test the detector logic
+        new_func = CodeFunction(
+            name="sanitize_text", 
+            file_path="test-duplicate.py", 
+            line_start=1, 
+            line_end=5,
+            signature="def sanitize_text():", 
+            body_content="def sanitize_text():\n    pass"
+        )
+        
+        existing_func_shared = CodeFunction(
+            name="normalize_text", 
+            file_path="src/shared/utils/text.py", 
+            line_start=1, 
+            line_end=5,
+            signature="def normalize_text():", 
+            body_content="def normalize_text():\n    pass"
+        )
+        
+        existing_func_integrations = CodeFunction(
+            name="_normalize_text", 
+            file_path="src/projects/integrations/bmg_laudos/src/agents/exyon/report_service.py", 
+            line_start=1, 
+            line_end=5,
+            signature="def _normalize_text():", 
+            body_content="def _normalize_text():\n    pass"
+        )
+        
+        # Test threshold selection logic
+        folder_thresholds = {"src/shared": 0.3, "src/projects/integrations": 0.4}
+        config = ThresholdConfig(global_threshold=0.5, folder_thresholds=folder_thresholds)
+        
+        # Test get_threshold_for_file method
+        assert config.get_threshold_for_file("test-duplicate.py") == 0.5  # global
+        assert config.get_threshold_for_file("src/shared/utils/text.py") == 0.3  # folder-specific
+        assert config.get_threshold_for_file("src/projects/integrations/bmg_laudos/src/agents/exyon/report_service.py") == 0.4  # folder-specific
+        
+        # Test that max threshold logic would work
+        # For match 1: test-duplicate.py (0.5) vs src/shared/utils/text.py (0.3) -> max = 0.5
+        # But in the actual user case: test-duplicate.py (0.3) vs src/shared/utils/text.py (0.3) -> max = 0.3
+        # Similarity 34.2% (0.342) > 0.3 -> should report
+        
+        # For match 2: test-duplicate.py (0.3) vs src/projects/integrations/... (0.4) -> max = 0.4  
+        # Similarity 30.9% (0.309) < 0.4 -> should NOT report
 
 
 class TestThresholdConfig:

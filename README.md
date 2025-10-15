@@ -171,6 +171,8 @@ Control when functions are considered duplicates with flexible threshold setting
 - **Example**: `{"src/shared": 0.1, "src/tests": 0.9}`
 - **Priority**: Folder-specific thresholds override global threshold
 - **Matching**: Uses most specific (longest) matching folder path
+- **Dual Path Logic**: Considers both the new function's path AND existing function's path
+- **Threshold Selection**: Uses the **more strict (higher)** threshold between the two paths
 - **Fallback**: If no folder threshold matches, uses global threshold
 
 #### Threshold Examples
@@ -184,6 +186,22 @@ global-threshold: 0.5
 # Mixed approach (lenient for shared code, strict for tests)
 folder-thresholds: '{"src/shared": 0.1, "tests": 0.9, "src/core": 0.8}'
 ```
+
+#### How Dual Path Logic Works
+When comparing functions from different folders, the system:
+1. Gets threshold for new function's folder (or global if no match)
+2. Gets threshold for existing function's folder (or global if no match)  
+3. Uses the **higher (more strict)** threshold of the two
+
+**Example**:
+```yaml
+global-threshold: 0.3
+folder-thresholds: '{"src/shared": 0.3, "src/projects/integrations": 0.4}'
+```
+
+- `test.py` vs `src/shared/utils.py`: Uses `max(0.3, 0.3) = 0.3` threshold → 34.2% > 30% ✅ **Reported**
+- `test.py` vs `src/projects/integrations/service.py`: Uses `max(0.3, 0.4) = 0.4` threshold → 30.9% < 40% ❌ **Not Reported**
+- `main.py` vs `src/core/logic.py`: Uses `max(0.3, 0.3) = 0.3` threshold (both use global)
 
 #### Real-World Use Cases
 - **Shared Libraries**: Low threshold (0.1-0.3) to catch even minor duplications

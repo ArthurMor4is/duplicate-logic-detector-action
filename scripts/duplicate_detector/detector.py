@@ -211,9 +211,12 @@ class DuplicateLogicDetector:
             )
 
             # Only include matches above the configured threshold
-            if self.threshold_config.should_report_match(
-                similarity_score, new_func.file_path
-            ):
+            # Check both file paths and use the more strict (higher) threshold
+            new_threshold = self.threshold_config.get_threshold_for_file(new_func.file_path)
+            existing_threshold = self.threshold_config.get_threshold_for_file(existing_func.file_path)
+            effective_threshold = max(new_threshold, existing_threshold)
+            
+            if similarity_score >= effective_threshold:
                 match = DuplicateMatch(
                     new_function=new_func,
                     existing_function=existing_func,
