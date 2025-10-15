@@ -49,6 +49,12 @@ dataset = [
     "pandas>=2.0.0",          # Data manipulation for dataset building
     "numpy>=1.24.0",          # Numerical operations
 ]
+# Evaluation dependencies (for evaluating similarity strategies)
+evaluation = [
+    "pandas>=2.0.0",          # Data manipulation and analysis
+    "numpy>=1.24.0",          # Numerical operations
+    "scikit-learn>=1.0.0",    # Machine learning metrics (ROC, PR curves, etc.)
+]
 test = [
     "pytest>=7.0.0",
     "pytest-mock>=3.10.0",
@@ -69,6 +75,8 @@ run-tests = "run_tests:main"
 # Dataset generation CLI tools
 generate-clones = "scripts.dataset_generation.generate_clones:main"
 build-dataset = "scripts.dataset_generation.build_dataset:main"
+# Evaluation CLI tools
+evaluate-strategies = "scripts.dataset_generation.evaluate_strategies:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["scripts"]

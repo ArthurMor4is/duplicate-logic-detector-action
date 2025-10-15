@@ -459,6 +459,12 @@ dev = [
     { name = "mypy" },
     { name = "pre-commit" },
 ]
+evaluation = [
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "pandas" },
+    { name = "scikit-learn" },
+]
 research = [
     { name = "gitpython" },
     { name = "nltk" },
@@ -488,9 +494,11 @@ requires-dist = [
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.0.0" },
     { name = "nltk", marker = "extra == 'research'", specifier = "==3.9.1" },
     { name = "numpy", marker = "extra == 'dataset'", specifier = ">=1.24.0" },
+    { name = "numpy", marker = "extra == 'evaluation'", specifier = ">=1.24.0" },
     { name = "numpy", marker = "extra == 'research'", specifier = ">=1.24.0" },
     { name = "openai", marker = "extra == 'dataset'", specifier = ">=1.0.0" },
     { name = "pandas", marker = "extra == 'dataset'", specifier = ">=2.0.0" },
+    { name = "pandas", marker = "extra == 'evaluation'", specifier = ">=2.0.0" },
     { name = "pandas", marker = "extra == 'research'", specifier = ">=2.0.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.0.0" },
     { name = "pygithub", marker = "extra == 'research'", specifier = "==2.8.1" },
@@ -500,9 +508,10 @@ requires-dist = [
     { name = "pytest-xdist", marker = "extra == 'test'", specifier = ">=3.0.0" },
     { name = "pyyaml", marker = "extra == 'research'", specifier = ">=6.0" },
     { name = "rich", marker = "extra == 'runtime'", specifier = "==14.1.0" },
+    { name = "scikit-learn", marker = "extra == 'evaluation'", specifier = ">=1.0.0" },
     { name = "scikit-learn", marker = "extra == 'research'", specifier = "==1.7.2" },
 ]
-provides-extras = ["runtime", "research", "dataset", "test", "dev"]
+provides-extras = ["runtime", "research", "dataset", "evaluation", "test", "dev"]
 
 [[package]]
 name = "exceptiongroup"
